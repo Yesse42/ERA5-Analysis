@@ -1,7 +1,7 @@
 using NCDatasets, DataStructures
 
 #List of files in time order
-datasets = NCDataset.(["Base/ERA5-SD-1979-2021-DL-2022-6-15.nc", "Base/ERA5-SD-2022-2022-DL-2022-6-16.nc"], "r")
+datasets = NCDataset.(["ERA5 Data/Base/ERA5-SD-1979-2021-DL-2022-6-15.nc", "ERA5 Data/Base/ERA5-SD-2022-2022-DL-2022-6-16.nc"], "r")
 
 #Get the attributes, all of which can be from the first
 vars = keys(datasets[1])
@@ -21,7 +21,7 @@ interweaved = choose_expver.(datasets[2]["sd"][:,:,1,:], datasets[2]["sd"][:,:,2
 newsd = cat(Array.((datasets[1]["sd"], interweaved))...; dims=3)
 
 #Now create the new dataset
-fname = "Base/ERA5-SD-1979-2022-CREATE-2022-06-16.nc"
+fname = "ERA5 Data/Base/ERA5-SD-1979-2022-CREATE-2022-06-16.nc"
 if isfile(fname) rm(fname) end
 combo = NCDataset(fname, "c")
 
