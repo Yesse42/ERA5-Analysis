@@ -1,4 +1,5 @@
 using NCDatasets, DataStructures
+cd(@__DIR__); cd("..")
 
 #List of files in time order
 datasets = NCDataset.(["ERA5 Data/Base/ERA5-SD-1979-2021-DL-2022-6-15.nc", "ERA5 Data/Base/ERA5-SD-2022-2022-DL-2022-6-16.nc"], "r")

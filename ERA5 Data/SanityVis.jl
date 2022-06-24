@@ -1,4 +1,5 @@
 using Proj, NCDatasets, Dates
+cd(@__DIR__); cd("..")
 
 trans = Proj.Transformation("EPSG:4326", "+proj=stere +lat_0=63 +lon_0=-150")
 

@@ -20,6 +20,7 @@ course = CSV.read(datadir("cleansed", "Snow_Course_Meta.csv"), DataFrame)
 allowed_snotel = filter(row->any(occursin.(id_regex, string(row.HUC))), snotel)
 allowed_snow_course = filter(row->any(occursin.(id_regex, string(row.HUC))), course)
 
+#Remove obnoxious tabs from the snow course IDs
 allowed_snow_course.ID .= rstrip.(allowed_snow_course.ID, '\t')
 
 CSV.write(datadir("cleansed", "Relevant_Stations.csv"), vcat(allowed_snotel, allowed_snow_course))
