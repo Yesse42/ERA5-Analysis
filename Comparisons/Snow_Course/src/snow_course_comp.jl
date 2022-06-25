@@ -14,8 +14,7 @@ data_by_station = Dictionary()
 for id in stations.ID
 
     #Skip if there is no extracted point there due to glaciation for either ERA5 type
-    if !isfile(joinpath(eradatadir,"Land","$id.csv")) continue end
-    if !isfile(joinpath(eradatadir,"Base","$id.csv")) continue end
+    if !all(isfile.(joinpath.(eradatadir,["Land", "Base"],"$id.csv"))) continue end
 
     #Now filter for the name of the column we want; it should have SWE and this ID in it
     colname = [name for name in station_names if name == "SWE_$id"]
