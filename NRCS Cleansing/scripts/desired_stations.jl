@@ -4,8 +4,9 @@ using DrWatson; @quickactivate "NRCS Cleansing"
 
 using CSV, DataFrames
 
+#Allowed HUC's
 chena_basin_ids = ["19080306"]
-copper_ids = ["1902"] .* "0" .* string.((1,2,3))
+copper_ids = ["19020"] .* string.((1,2,3))
 kenai_ids = ["190203"]
 southeast_ids = ["190705"]
 remote_ids = ["19050301"]
