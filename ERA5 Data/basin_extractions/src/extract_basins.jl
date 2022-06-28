@@ -11,17 +11,19 @@ era5dirs = "../../".*eratypes.*"/".*eradirs
 datasets = Dictionary(eratypes, NCDataset.(era5dirs, "r"))
 lats =  getindex.(getindex.(datasets, "latitude"),:)
 lons =  getindex.(getindex.(datasets, "longitude"),:)
+sds = getindex.(getindex.(datasets, "sd"),:)
+for sd in sds sd[ismissing.(sd)] .= NaN end
+function isglacier(sd_arr; glacier_thresh=0.95)
+    glacier_mask = (sum(sd_arr .> 0; dims=3) ./ size(sd_arr, 3)) .>= glacier_thresh
+end
+glacierarrs = Dictionary(eratypes, isglacier.(sds))
+#Set missing areas to show as glacier so they are excluded as well
+for (glaciermask, sd) in zip(glacierarrs, sds) glaciermask[ismissing.(sd[:,:,1]), 1] .= true end
 lonlats = Dictionary(eratypes, [SVector.(lon, lat') for (lon,lat) in zip(lons,lats)])
 
 shapes = Dictionary([6,8],DataFrame.(Shapefile.Table.([HUC6_path, HUC8_path])))
 
-chena_basin_ids = ["19080306"]
-copper_ids = ["19020"] .* string.((1,2,3))
-kenai_ids = ["190203"]
-southeast_ids = ["190705"]
-remote_ids = ["19050301"]
-allowed_ids = [chena_basin_ids, copper_ids, kenai_ids, southeast_ids, remote_ids]
-basin_names = ["Chena", "Copper", "Kenai", "Southeast", "Remote"]
+include("../../../NRCS Cleansing/data/wanted_stations.jl")
 
 #For each eratype, extract the indices of valid era5 points in the basin using a point in lat-lon polygon method
 for eratype in eratypes
@@ -42,8 +44,9 @@ for eratype in eratypes
 
             #And now loop through every point and check if it's in the basin
             erapoints = lonlats[eratype]
+            glacier_mask = glacierarrs[eratype]
             for era_point_idx in CartesianIndices(erapoints)
-                if inpolygon(erapoints[era_point_idx], poly_verts) == 1
+                if inpolygon(erapoints[era_point_idx], poly_verts) == 1 && !glacier_mask[era_point_idx]
                     push!(allowed_points, SVector(Tuple(era_point_idx)...))
                 end
             end
