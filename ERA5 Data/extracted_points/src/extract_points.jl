@@ -11,7 +11,7 @@ for (eratype, ncpath) in zip(["Base", "Land"], ncpaths)
     for row in eachrow(nearby_point_idxs)
         if row.col ≡ missing continue end
         data = sd[row.row, row.col, :]
-        CSV.write("../data/$(eratype)/$(row.ID).csv", DataFrame(sd=data))
+        CSV.write("../$(eratype)/$(row.ID).csv", DataFrame(sd=data))
     end
-    CSV.write("../data/$(eratype)/times.csv", DataFrame(datetime=times))
+    CSV.write("../$(eratype)/times.csv", DataFrame(datetime=times))
 end
