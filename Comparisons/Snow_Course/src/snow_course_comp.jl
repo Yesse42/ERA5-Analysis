@@ -7,7 +7,7 @@ stations = CSV.read(joinpath(nrcsdatadir, "Relevant_Stations.csv"), DataFrame)
 filter!(row->occursin("Snow Course", row.Network), stations)
 
 station_data = CSV.read(joinpath(nrcsdatadir, "Snow_Course_Data.csv"), DataFrame)
-select!(station_data, Not(:Date), :Date=>ByRow(x->parse(DateTime, x, dateformat"u YYYY"))=>:datetime)
+select!(station_data, Not(:Date), :Date=>:datetime)
 station_names = names(station_data)
 eratypes = ["Land","Base"]
 data_by_station = Dictionary()
@@ -59,9 +59,6 @@ labeled_data_array = DimArray(analysisarray, (Station(collect(keys(data_by_stati
 
 rmsd(diffarr) = sqrt(sum(x^2 for x in diffarr)/length(diffarr))
 
-
-data_source_pairings = [ [groupingcols[j], groupingcols[i]] for i in eachindex(groupingcols) for j in 1:i if i≠j]
-
 for (i,(station, data)) in enumerate(zip(keys(data_by_station), data_by_station))
     for (j,eratype) in enumerate(eratypes)
         groupingcols = ["Station",eratype]
@@ -96,5 +93,3 @@ for (i,(station, data)) in enumerate(zip(keys(data_by_station), data_by_station)
 end
 
 labeled_data_array
-
-

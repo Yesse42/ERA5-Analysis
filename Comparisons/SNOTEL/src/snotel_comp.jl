@@ -7,6 +7,7 @@ stations = CSV.read(joinpath(nrcsdatadir, "Relevant_Stations.csv"), DataFrame)
 filter!(row->occursin("SNOTEL", row.Network), stations)
 
 station_data = CSV.read(joinpath(nrcsdatadir, "SNOTEL_Data.csv"), DataFrame)
+#The 12 hour here is to align the daily snotel measurement to be in the same hour as the ERA5 one
 select!(station_data, Not(:Date), :Date=>ByRow(x->DateTime(x)+Hour(12))=>:datetime)
 station_names = names(station_data)
 eratypes = ["Land","Base"]
