@@ -1,6 +1,6 @@
-using DrWatson
-@quickactivate "NRCS Cleansing"
-using CSV, DataFrames
+cd(@__DIR__)
+datadir(paths...)=joinpath("../data/", paths...)
+using CSV, DataFrames, Dates
 
 snotelpath = datadir("raw", "AK_SNOTEL_14-06-2022.csv")
 snowcoursepath = datadir("raw","AK_SNOW_COURSE_14-06-2022.csv")
@@ -32,6 +32,7 @@ course_ids = [match(course_regex, name).captures[1] for name in course_names]
 #Now finally rename the columns of the raw data with these ids
 rename!(snotel, vcat("Date", (["SWE", "Depth"] .* "_" .* permutedims(snotel_ids))[:]))
 rename!(snow_course, vcat("Date", (["SWE", "Depth"] .* "_" .* permutedims(course_ids))[:]))
+snow_course.Date = parse.(DateTime, snow_course.Date, dateformat"u YYYY")
 
 #Now save the new stuff
 CSV.write(joinpath(outdir, "SNOTEL_Meta.csv"), snotel_meta)

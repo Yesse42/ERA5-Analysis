@@ -1,15 +1,10 @@
-#Extract only the locations we are interested in
-
-using DrWatson; @quickactivate "NRCS Cleansing"
+cd(@__DIR__)
+datadir(paths...)=joinpath("../data/", paths...)
 
 using CSV, DataFrames
 
 #Allowed HUC's
-chena_basin_ids = ["19080306"]
-copper_ids = ["19020"] .* string.((1,2,3))
-kenai_ids = ["190203"]
-southeast_ids = ["190705"]
-remote_ids = ["19050301"]
+include(datadir("wanted_stations.jl"))
 
 allowed_ids = vcat(chena_basin_ids, copper_ids, kenai_ids, southeast_ids, remote_ids)
 

@@ -1,4 +1,5 @@
-using DrWatson; @quickactivate "NRCS Cleansing"
+cd(@__DIR__)
+datadir(paths...)=joinpath("../data/", paths...)
 
 using CSV, DataFrames, Dates
 
