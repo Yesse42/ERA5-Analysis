@@ -63,6 +63,7 @@ offset_index = CartesianIndex(1,1)
 for (i, name) in enumerate(["Base", "Land"])
     out_index_df = DataFrame(ID = String[], row = [], col=[])
     out_closest_era_point_id = DataFrame(ID=String[], row=[], col=[], georow=[], geocol=[])
+    out_elevation_diff_df = DataFrame(ID = String[], stat_el=[], era_el=[])
     for (row, nnid, geonnid) in zip(eachrow(stations), nearest_neighbor_idxs, geo_neighbor_idxs)
         #First extract the nearest neighbor to save it away for later use
         true_nn = Tuple(nnid[i])
@@ -95,6 +96,7 @@ for (i, name) in enumerate(["Base", "Land"])
             if elarr[idx] ≢ NaN
                 outidx = Tuple(idarr[idx])
                 push!(out_index_df, (ID=row.ID, row = outidx[1], col=outidx[2]))
+                push!(out_elevation_diff_df, (ID=row.ID, era_el=elarr[idx], stat_el=row.Elevation_ft*0.3048))
                 break
             end
         end
@@ -103,6 +105,7 @@ for (i, name) in enumerate(["Base", "Land"])
         end
     end
     CSV.write("../data/"*name*"_nearby_point_idx.csv", out_index_df)
+    CSV.write("../data/"*name*"_elevations.csv", out_elevation_diff_df)
     CSV.write("../data/"*name*"_true_nearest_neighbor.csv", out_closest_era_point_id)
 end
 

@@ -1,5 +1,7 @@
 using CSV, DataFrames, Dates, Dictionaries, DimensionalData, StatsBase
 cd(@__DIR__)
+burrowactivate()
+import ERA5_Analysis as ERA
 nrcsdatadir = "../../../NRCS Cleansing/data/cleansed/"
 eradatadir = "../../../ERA5 Data/extracted_points/"
 
@@ -9,7 +11,7 @@ filter!(row->occursin("Snow Course", row.Network), stations)
 station_data = CSV.read(joinpath(nrcsdatadir, "Snow_Course_Data.csv"), DataFrame)
 select!(station_data, Not(:Date), :Date=>:datetime)
 station_names = names(station_data)
-eratypes = ["Land","Base"]
+eratypes = ERA.eratypes
 data_by_station = Dictionary()
 for id in stations.ID
 
@@ -92,4 +94,5 @@ for (i,(station, data)) in enumerate(zip(keys(data_by_station), data_by_station)
     end
 end
 
-labeled_data_array
+using JLD2
+jldsave("../data/snow_course_monthly_data.jld2", snow_course_data = labeled_data_array, dims = (EraType, Station))

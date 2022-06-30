@@ -1,4 +1,4 @@
-cd(@__DIR__)
+burrowactivate
 using Shapefile, DataFrames, CSV, NCDatasets, Dictionaries, PolygonOps, StaticArrays
 
 HUC6_path = "../data/HUC_Shapes/WBDHU6.shp"

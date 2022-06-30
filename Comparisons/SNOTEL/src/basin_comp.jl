@@ -26,7 +26,7 @@ end
 analysis_holder
 
 using Plots
-pyplot()
+gr()
 data = analysis_holder[EraType(At("Base")), Basin(At("Chena"))]
-filter!(row-> Date(2017,9) <= row.datetime <= Date(2022,8,31), data)
+filter!(row-> Date(2019,9) <= row.datetime <= Date(2022,8,31), data)
 plot(data.datetime, Array(data[:, [:station_sd, :era_sd]])./mean(Array(data[:, [:station_sd, :era_sd]]); dims=1); labels=["station" "era Land"], legend=:topleft)
