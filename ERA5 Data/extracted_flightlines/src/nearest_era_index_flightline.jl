@@ -7,8 +7,8 @@ include("../../nearest_geodetic_neighbor.jl")
 #Some functions to be used later; this one detects a glacier or missing data
 function isglacier(era_sd; glacier_thresh=0.95)
     era_sd[ismissing.(era_sd)] .= NaN
-    #The ! and <= here is because NaN is less than any number
-    return (!).((sum(era_sd .> 0; dims=3) ./ size(era_sd, 3)) .<= glacier_thresh)
+
+    return ((sum(era_sd .> 0; dims=3) ./ size(era_sd, 3)) .>= glacier_thresh) .| ismissing.(era_sd[:,:,1])
 end
 
 #First get a list of Alaska flightlines with data
@@ -37,7 +37,13 @@ for (eratype, erafile) in zip(ERA.eratypes, ERA.erafiles)
             closest_idx = brute_nearest_neighbor_idx(point, lonlatgrid)
             !glacier_mask[closest_idx] && push!(close_points, Tuple(closest_idx))
         end
+        #If there are no available points go on your merry way
+        if isempty(close_points) continue end
         close_points = unique(close_points)
+        #chuck any of those points which are at places where era5 may be missing
+        nonmissing_idxs = mapslices(x->!any(ismissing(x)), sd[CartesianIndex.(close_points),:]; dims=[2])[:]
+        close_points = close_points[nonmissing_idxs]
+        if isempty(close_points) continue end
         insert!(fline_to_nearest_neighbor, flightline.station_id, close_points)
     end
 
