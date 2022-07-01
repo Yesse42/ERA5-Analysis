@@ -1,113 +1,70 @@
-#Get the datasets
 cd(@__DIR__)
+burrowactivate()
+using CSV, DataFrames, Dates, NCDatasets
+import ERA5Analysis as ERA
+include("../../nearest_geodetic_neighbor.jl")
 
-using CSV, DataFrames, Plots, Proj, Dates, NCDatasets, ColorSchemes
-
-files = ["../../Base/ERA5-SD-1979-2022-CREATE-2022-06-16.nc", "../../Land/ERA5-Land-SD-1979-2022-DL-2022-6-15.nc"]
-
-#And the geopotentials
-geofiles = "../data/".*["base","land"].*"_geopotentials.nc"
-
-#And load them in, converting geopotential to elevation by dividing by ERA5's constant gravity
-gravity = 9.80665 
-datasets = Dataset.(files, "r")
-geosets = Dataset.(geofiles, "r")
-times = [Hour.(ds["time"][:]) .+ DateTime(1900,1,1) for ds in datasets]
-lats = [ds["latitude"][:] for ds in datasets]
-lons = [ds["longitude"][:] for ds in datasets]
-sds = [ds["sd"][:] for ds in datasets]
-geolats = [gds["latitude"][:] for gds in geosets]
-geolons = [gds["longitude"][:] for gds in geosets]
-for lon in geolons
-    lon[lon .> 180] .-= 360
-end
-elevations = [gds["z"][:] ./ gravity  for gds in geosets]
-
-#Load in the desired stations too
-stations = CSV.read("../../../NRCS Cleansing/data/cleansed/Relevant_Stations.csv", DataFrame)
-
-#And now get the indices of the nearest neighbor for each station
-dist(tup) = sqrt(sum(x^2 for x in tup))
-nearest_neighbor_idxs = Vector{CartesianIndex{2}}[]
-for i in 1:nrow(stations)
-    s_lat = stations[i, :Latitude]
-    s_lon = stations[i, :Longitude]
-    #Apply the azimuthal equidistant projection so that the distances are correct, because I'm too lazy to calculate the great circle distance
-    thisproj = Proj.Transformation("EPSG:4326", "+proj=aeqd +lat_0=$s_lat +lon_0=$s_lon")
-    nn_idxs = [argmin(dist.(thisproj.(lat', lon))) for (lat, lon) in zip(lats, lons)]
-    push!(nearest_neighbor_idxs, nn_idxs)
+#Some functions to be used later; this one detects a glacier or missing data
+function isglacier(era_sd; glacier_thresh=0.95)
+    era_sd[ismissing.(era_sd)] .= NaN
+    #The ! here is because NaN is less than any number
+    return (!).((sum(era_sd .> 0; dims=3) ./ size(era_sd, 3)) .<= glacier_thresh)
 end
 
-#And now go find those same point's indices in the geopotential arrays
-geo_neighbor_idxs = Vector{CartesianIndex{2}}[]
-for idxs in nearest_neighbor_idxs
-    lonidxs, latidxs = first.(Tuple.(idxs)), last.(Tuple.(idxs))
-    geolonidxs = findfirst.(isapprox.(getindex.(lons, lonidxs)), geolons)
-    geolatidxs = findfirst.(isapprox.(getindex.(lats, latidxs)), geolats)
-    push!(geo_neighbor_idxs, CartesianIndex.(geolonidxs, geolatidxs))
-end
+#A special distance function which weights both elevation differences and horizontal ones
+weight_func(eldiff, dist) = eldiff/100 + dist/5000
 
-#Mask out glacier/permasnow areas, by finding where snow is present more than 95% of the time
-function isglacier(sd_arr; glacier_thresh=0.95)
-    glacier_mask = (sum(sd_arr .> 0; dims=3) ./ size(sd_arr, 3)) .>= glacier_thresh
-end
+#Load in the stations too
+stations = CSV.read.("$(ERA.NRCSDATA)/cleansed/".*ERA.networktypes.*"_Metadata.csv", DataFrame)
+stations = vcat(stations...)
 
-glacierarrs = isglacier.(replace(ds["sd"][:], missing=>NaN) for ds in datasets)
+#This script will find the nearest ERA5 grid point to each station
+for (eratype, erafile) in zip(ERA.eratypes, ERA.erafiles)
+    sd_data = Dataset("$(ERA.ERA5DATA)/$eratype/$erafile","r")
+    sd = sd_data["sd"][:]
+    elev_data = Dataset("../data/$(eratype)_aligned_elevations.nc","r")
+    elevations = elev_data["elevation_m"][:]
+    glacier_mask = isglacier(sd_data["sd"][:])
+    lonlatgrid = tuple.(sd_data["longitude"][:], sd_data["latitude"][:]')
+    station_locs = tuple.(stations.Longitude, stations.Latitude)
 
-#And now use a weight function to extract the unglaciated point with the minimum weight, if possible
+    #Now get the nearest neighbor indices
+    nearest_neighbors = brute_nearest_neighbor_idx.(station_locs, Ref(lonlatgrid))
 
-dist(x...) = sqrt(sum(y^2 for y in x))
-dist_height_weighter(dist, elev_diff)=dist/5000 + elev_diff/500
+    #Now we must go through the 9 gridpoints closest to the nearest neighbor and select one that is not on the sea,
+    #or a glacier, and that is close by the above defined weighting function
+    out_neighbor_df = DataFrame(stat_id = String[], lonidx = Int[], latidx = Int[], era_point_el = Float16[])
+    for (statdata, I) in zip(eachrow(stations), nearest_neighbors)
+        offset = CartesianIndex(1,1)
+        near_idxs = I-offset:I+offset
 
-offset_index = CartesianIndex(1,1)
-for (i, name) in enumerate(["Base", "Land"])
-    out_index_df = DataFrame(ID = String[], row = [], col=[])
-    out_closest_era_point_id = DataFrame(ID=String[], row=[], col=[], georow=[], geocol=[])
-    out_elevation_diff_df = DataFrame(ID = String[], stat_el=[], era_el=[])
-    for (row, nnid, geonnid) in zip(eachrow(stations), nearest_neighbor_idxs, geo_neighbor_idxs)
-        #First extract the nearest neighbor to save it away for later use
-        true_nn = Tuple(nnid[i])
-        true_geo_nn = Tuple(geonnid[i])
-        push!(out_closest_era_point_id, (ID=row.ID, row=true_nn[1], col=true_nn[2], georow=true_geo_nn[1], geocol=true_geo_nn[2]))
-        #Get the 3x3 elevation array
-        elarr = elevations[i][geonnid[i]-offset_index:geonnid[i]+offset_index]
-        #Get the 3x3 index array for the snow depth + glacier mask data
-        idarr = nnid[i]-offset_index:nnid[i]+offset_index
-        #Get the glacier Mask
-        glacier_mask = glacierarrs[i][idarr]
-        #Mask out the glaciers by setting to NaN
-        elarr[glacier_mask] .= NaN
-        #Mask out sea level by setting to NaN
-        elarr[elarr .== 0] .= NaN
-        #Mask out missing data by also setting to NaN
-        elarr[sds[i][idarr, 1] .≡ missing] .= NaN
+        elev_data = elevations[near_idxs]
 
-        #Now project the cooredinate
-        latlon = tuple.(lats[i]', lons[i])[nnid[i]-offset_index:nnid[i]+offset_index]
-        thisproj = Proj.Transformation("EPSG:4326", "+proj=aeqd +lat_0=$(latlon[2,2][1]) +lon_0=$(latlon[2,2][2])")
-        projcoords = thisproj.(latlon)
-        x,y = first.(projcoords), last.(projcoords)
+        elev_data[glacier_mask[near_idxs]] .= NaN
 
-        weight_arr = dist_height_weighter.(dist.(x,y), abs.(elarr.-row.Elevation_ft*0.3048))
-        ordering = sortperm(weight_arr[:])
-        #Now examine the 4 "closest" points according to my distance+height weight function; take the first one that isn't glacier
-        outidx = nothing
-        for idx in ordering[1:4]
-            if elarr[idx] ≢ NaN
-                outidx = Tuple(idarr[idx])
-                push!(out_index_df, (ID=row.ID, row = outidx[1], col=outidx[2]))
-                push!(out_elevation_diff_df, (ID=row.ID, era_el=elarr[idx], stat_el=row.Elevation_ft*0.3048))
+        #Now calculate the weights
+        eldiffs = abs.(statdata.Elevation_m .- elev_data)
+        near_lonlat = lonlatgrid[near_idxs]
+        dists = great_circ_dist.(Ref((statdata.Longitude, statdata.Latitude)), near_lonlat)
+        weight_data = weight_func.(eldiffs, dists)
+
+        #Now get the ordering of the weight data from lowest to highest (NaNs will float to the top))
+        order = sortperm(weight_data[:])
+        #Only accept the points with the 4 lowest weights
+        for i in order[1:4]
+            if !isnan(eldiffs[i])
+                idx = Tuple(near_idxs[i])
+                push!(out_neighbor_df, (stat_id=string(statdata.ID), lonidx=idx[1], latidx=idx[2], era_point_el=elev_data[i]))
                 break
             end
         end
-        if outidx ≡ nothing
-            push!(out_index_df, (ID=row.ID, row = missing, col=missing))
-        end
     end
-    CSV.write("../data/"*name*"_nearby_point_idx.csv", out_index_df)
-    CSV.write("../data/"*name*"_elevations.csv", out_elevation_diff_df)
-    CSV.write("../data/"*name*"_true_nearest_neighbor.csv", out_closest_era_point_id)
+
+    #Now save the data on the nearest neighbors, including the row, column, station name, and elevation
+    CSV.write("../data/$(eratype)_chosen_points.csv", out_neighbor_df)
 end
+
+
 
 
 
