@@ -10,6 +10,7 @@ for (eratype, ncpath) in zip(ERA.eratypes, ERA.erafiles)
     sd = data["sd"][:]
     for row in eachrow(nearby_point_idxs)
         data = sd[row.lonidx, row.latidx, :]
+        if any(ismissing.(data)) continue end
         CSV.write("../$(eratype)/$(row.stat_id).csv", DataFrame(sd=data))
     end
     CSV.write("../$(eratype)/times.csv", DataFrame(datetime=times))

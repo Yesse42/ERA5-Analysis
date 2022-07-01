@@ -7,11 +7,12 @@ include("../../nearest_geodetic_neighbor.jl")
 #Some functions to be used later; this one detects a glacier or missing data
 function isglacier(era_sd; glacier_thresh=0.95)
     era_sd[ismissing.(era_sd)] .= NaN
-    #The ! here is because NaN is less than any number
-    return (!).((sum(era_sd .> 0; dims=3) ./ size(era_sd, 3)) .<= glacier_thresh)
+
+    return ((sum(era_sd .> 0; dims=3) ./ size(era_sd, 3)) .>= glacier_thresh) .| ismissing.(era_sd[:,:,1])
 end
 
 #A special distance function which weights both elevation differences and horizontal ones
+#100m elevation diff is equal to a 5km distance diff
 weight_func(eldiff, dist) = eldiff/100 + dist/5000
 
 #Load in the stations too
