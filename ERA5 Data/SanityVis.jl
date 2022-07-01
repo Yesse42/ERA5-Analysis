@@ -16,7 +16,7 @@ x, y = first.(projectedcoords), last.(projectedcoords)
 sd = permutedims(sd, (2,1,3))
 
 close(land_data)
-name = "ERA5 Data/SAveMe.nc"
+name = "ERA5 Data/plotdata.nc"
 if isfile(name) rm(name) end
 plotdata = Dataset(name, "c")
 defDim(plotdata, "row", size(x,1))
