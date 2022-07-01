@@ -4,7 +4,7 @@ using Pkg
 function burrowactivate(projectname=nothing)
     currentdir = pwd()
     try
-        while !(isfile("Project.toml") && (pwd() == projectname || isnothing(projectname)))
+        while !(isfile("Project.toml") && isfile("Manifest.toml") && (pwd() == projectname || isnothing(projectname)))
             cd("..")
         end
     catch e
