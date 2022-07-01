@@ -1,7 +1,7 @@
 using CSV, DataFrames, Dates, Dictionaries, DimensionalData, StatsBase
 cd(@__DIR__)
 burrowactivate()
-import ERA5_Analysis as ERA
+import ERA5Analysis as ERA
 nrcsdatadir = "../../../NRCS Cleansing/data/cleansed/"
 eradatadir = "../../../ERA5 Data/extracted_points/"
 
