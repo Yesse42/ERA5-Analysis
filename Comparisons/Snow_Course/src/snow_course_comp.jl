@@ -1,32 +1,24 @@
-using CSV, DataFrames, Dates, Dictionaries, DimensionalData, StatsBase
+using CSV, DataFrames, Dates, Dictionaries, AxisArrays, StatsBase, AxisArrays
 cd(@__DIR__)
 burrowactivate()
 import ERA5Analysis as ERA
-nrcsdatadir = "../../../NRCS Cleansing/data/cleansed/"
-eradatadir = "../../../ERA5 Data/extracted_points/"
+nrcsdatadir = "$(ERA.NRCSDATA)/cleansed/"
+eradatadir = "$(ERA.ERA5DATA)/extracted_points/"
 
-stations = CSV.read(joinpath(nrcsdatadir, "Relevant_Stations.csv"), DataFrame)
-filter!(row->occursin("Snow Course", row.Network), stations)
+stations = CSV.read(joinpath(nrcsdatadir, "Snow_Course_Metadata.csv"), DataFrame)
 
 station_data = CSV.read(joinpath(nrcsdatadir, "Snow_Course_Data.csv"), DataFrame)
-select!(station_data, Not(:Date), :Date=>:datetime)
-station_names = names(station_data)
+station_names = stations.ID
 eratypes = ERA.eratypes
 data_by_station = Dictionary()
 for id in stations.ID
 
     #Skip if there is no extracted point there due to glaciation for either ERA5 type
-    if !all(isfile.(joinpath.(eradatadir,["Land", "Base"],"$id.csv"))) continue end
+    if !all(isfile.(joinpath.(eradatadir,eratypes,"$id.csv"))) continue end
 
     #Now filter for the name of the column we want; it should have SWE and this ID in it
-    colname = [name for name in station_names if name == "SWE_$id"]
+    colname = "SWE_$id"
 
-    #There are more stations in metadata than what I've donwloaded, skip if we've found one of those
-    if isempty(colname) 
-        continue 
-    else 
-        colname = only(colname) 
-    end
     this_station_data = select(station_data, :datetime, colname=>:Station)
 
     eras=DataFrame[]
@@ -46,24 +38,17 @@ for id in stations.ID
     insert!(data_by_station, id, outdf)
 end
 
-#Load in the NRCS medians for each station too
-raw_NRCS_median = CSV.read(joinpath(nrcsdatadir, "Snow_Course_Medians_1991-2020.csv"), DataFrame)
-median_names = filter(x->x≠"month", names(raw_NRCS_median))
-mediandict = Dictionary(median_names, [raw_NRCS_median[:, ["month",name]] for name in median_names])
-
 #Now that we've loaded everything in we can start analyzing
 
 #Things we'll be analyzing
 analysisarray = Array{Any}(undef, length.((data_by_station, eratypes)))
-import DimensionalData: @dim
-@dim EraType; @dim Station
-labeled_data_array = DimArray(analysisarray, (Station(collect(keys(data_by_station))), EraType(eratypes)))
+labeled_data_array = AxisArray(analysisarray, station = collect(keys(data_by_station)), eratype = eratypes)
 
 rmsd(diffarr) = sqrt(sum(x^2 for x in diffarr)/length(diffarr))
 
 for (i,(station, data)) in enumerate(zip(keys(data_by_station), data_by_station))
     for (j,eratype) in enumerate(eratypes)
-        groupingcols = ["Station",eratype]
+        groupingcols = [eratype, "Station"]
         withmonth = transform(data, :datetime=>ByRow(month)=>:month)
         #1991-2020 normals
         filter!(row-> 1991<=year(row.datetime)<=2020, withmonth)
@@ -82,17 +67,17 @@ for (i,(station, data)) in enumerate(zip(keys(data_by_station), data_by_station)
         #Now calculate the differences, differences in anomalies, and differences in percent of normal
         groupcolswithtime = vcat(groupingcols, ["datetime"])
         diffdata = transform(data, groupingcols=>ByRow(-)=>:era_station_diff, 
-                        groupcolswithtime=>ByRow((x,y,t)->x-y + getmonthstat(t, eratype) - getmonthstat(t, "Station"))=>:anomaly_diff,
-                        groupcolswithtime=>ByRow((x,y,t)->100*(x/getmonthstat(t, eratype) - y/getmonthstat(t, "Station")))=>:pon_diff)
+                        groupcolswithtime=>ByRow((x,y,t)->x-y - getmonthstat(t, eratype) + getmonthstat(t, "Station"))=>:anomaly_diff,
+                        groupcolswithtime=>ByRow((x,y,t)->100*(x/getmonthstat(t, eratype) - y/getmonthstat(t, "Station")))=>:pom_diff)
         dropmissing!(diffdata)
         #Now calculate the mean differences and RMSD by month, for all available times, not just 1991-2020
         diffdata_withmonth = transform(diffdata, :datetime=>ByRow(month)=>:month)
         group_diff = groupby(diffdata_withmonth, :month)
-        groupcols = String.([:era_station_diff, :anomaly_diff, :pon_diff])
+        groupcols = String.([:era_station_diff, :anomaly_diff, :pom_diff])
         month_diff_stats = combine(group_diff, groupcols.=>mean.=>groupcols.*"_Mean", groupcols.=>rmsd.=>groupcols.*"_RMSD")
         analysisarray[i,j] = outerjoin(monthstats, month_diff_stats; on=:month)
     end
 end
 
 using JLD2
-jldsave("../data/snow_course_monthly_data.jld2", snow_course_data = labeled_data_array, dims = (EraType, Station))
+jldsave("../data/snow_course_monthly_data.jld2", snow_course_data = labeled_data_array)
