@@ -1,6 +1,8 @@
 cd(@__DIR__)
+burrowactivate()
 datadir(paths...)=joinpath("../data/", paths...)
 using CSV, DataFrames, Dates
+import ERA5Analysis as ERA
 
 snotelpath = datadir("raw", "AK_SNOTEL_14-06-2022.csv")
 snowcoursepath = datadir("raw","AK_SNOW_COURSE_14-06-2022.csv")
@@ -11,9 +13,9 @@ outdir = datadir("cleansed")
 #Read out the data
 metadata = CSV.read(metapath, DataFrame)
 #Remove the tab from the id column
-transform!(metadata, :ID=>ByRow(id->strip(id, '\t')=>:ID))
-snow_course_meta = filter(x->occursin("Snow Course", x.Network), metadata)
-snotel_meta = filter(x->occursin("SNOTEL", x.Network), metadata)
+metadata.ID .= strip.(metadata.ID, '\t')
+metadata.Network[occursin.("Snow Course",metadata.Network)] .= "Snow_Course"
+select!(metadata, :Elevation_ft=>ByRow(x->x*0.3048)=>:Elevation_m, Not(:Elevation_ft))
 snotel = CSV.read(snotelpath, DataFrame; header=130)
 snow_course = CSV.read(snowcoursepath, DataFrame; header=251)
 
@@ -33,9 +35,14 @@ course_ids = [match(course_regex, name).captures[1] for name in course_names]
 rename!(snotel, vcat("Date", (["SWE", "Depth"] .* "_" .* permutedims(snotel_ids))[:]))
 rename!(snow_course, vcat("Date", (["SWE", "Depth"] .* "_" .* permutedims(course_ids))[:]))
 snow_course.Date = parse.(DateTime, snow_course.Date, dateformat"u YYYY")
+for df in [snotel, snow_course]
+    select!(df, :Date=>:datetime, r"SWE")
+    #Remove any columns that are entirely missing
+    notallmissing_col = [!all(ismissing.(col)) for col in eachcol(df)]
+    select!(df, names(df)[notallmissing_col])
+end
 
 #Now save the new stuff
-CSV.write(joinpath(outdir, "SNOTEL_Meta.csv"), snotel_meta)
-CSV.write(joinpath(outdir, "Snow_Course_Meta.csv"), snow_course_meta)
+CSV.write(joinpath(outdir, "Metadata.csv"), metadata)
 CSV.write(joinpath(outdir, "SNOTEL_Data.csv"), snotel)
 CSV.write(joinpath(outdir, "Snow_Course_Data.csv"), snow_course)

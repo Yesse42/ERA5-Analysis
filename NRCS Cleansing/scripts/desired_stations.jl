@@ -1,22 +1,40 @@
 cd(@__DIR__)
+burrowactivate()
 datadir(paths...)=joinpath("../data/", paths...)
 
-using CSV, DataFrames
+using CSV, DataFrames, Dictionaries, JLD2
+import ERA5Analysis as ERA 
 
-#Allowed HUC's
-include(datadir("wanted_stations.jl"))
+#We want to filter the Metadata to contain just the stations we want. Also create a dictionary to
+#conveniently map between basin HUC's and their associated station ids
 
-allowed_ids = vcat(chena_basin_ids, copper_ids, kenai_ids, southeast_ids, remote_ids)
+metadata = CSV.read("../data/cleansed/Metadata.csv", DataFrame)
 
-id_regex = [Regex("^$str") for str in allowed_ids]
+huc_to_basin = Dict([huc=>basin for (hucs, basin) in zip(ERA.allowed_hucs, ERA.basin_names) for huc in hucs])
 
-snotel = CSV.read(datadir("cleansed","SNOTEL_Meta.csv"), DataFrame)
-course = CSV.read(datadir("cleansed", "Snow_Course_Meta.csv"), DataFrame)
+for network in ERA.networktypes
+    basin_to_id=Dictionary{String, Vector{String}}(ERA.basin_names, [String[] for i in 1:length(ERA.basin_names)])
+    network_data = CSV.read("../data/cleansed/$(network)_Data.csv", DataFrame)
+    #Check each row of the metadata table
+    for row in eachrow(metadata)
+        for huc in keys(huc_to_basin)
+            if occursin(huc, string(row.HUC))
+                #Now confirm that we have data for the station, and that it is in the proper network
+                !any(occursin.(row.ID, names(network_data))) && continue
+                #If we do push it
+                push!(basin_to_id[huc_to_basin[huc]], row.ID)
+            end
+        end
+    end
 
-allowed_snotel = filter(row->any(occursin.(id_regex, string(row.HUC))), snotel)
-allowed_snow_course = filter(row->any(occursin.(id_regex, string(row.HUC))), course)
+    #Now recover the basin from the ID
+    basin_from_id = Dict([id=>basin for (basin, ids) in collect(pairs(basin_to_id)) for id in ids])
 
-#Remove obnoxious tabs from the snow course IDs
-allowed_snow_course.ID .= rstrip.(allowed_snow_course.ID, '\t')
+    jldsave("../data/cleansed/$(network)_basin_to_id.jld2", basin_to_id=basin_to_id)
+    id_indices = findall(id->id in reduce(vcat, collect(basin_to_id)), metadata.ID)
+    new_metadata = metadata[id_indices, :]
+    transform!(new_metadata, :ID=>ByRow(x->basin_from_id[x])=>:Basin)
 
-CSV.write(datadir("cleansed", "Relevant_Stations.csv"), vcat(allowed_snotel, allowed_snow_course))
+    CSV.write("../data/cleansed/$(network)_Metadata.csv",new_metadata)
+    display(nrow(new_metadata))
+end
