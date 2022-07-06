@@ -4,7 +4,8 @@ burrowactivate()
 import ERA5Analysis as ERA
 
 analysis_data = jldopen("../data/snotel_monthly_data.jld2")["snotel_monthly_data"]
-basin_to_stations = jldopen("$(ERA.NRCSDATA)/cleansed/SNOTEL_basin_to_id.jld2")["basin_to_id"]
+basin_to_stations =
+    jldopen("$(ERA.NRCSDATA)/cleansed/SNOTEL_basin_to_id.jld2")["basin_to_id"]
 
 for eratype in ERA.eratypes
     for basin in ERA.basin_names
@@ -19,18 +20,24 @@ for eratype in ERA.eratypes
         ids_with_data = data.axes[1].val
 
         varnames = names(data[1])[2:end]
-        
-        newnames = [["month"; names(data[1])[2:end].*"_".*station] for station in ids_with_data]
+
+        newnames = [
+            ["month"; names(data[1])[2:end] .* "_" .* station] for station in ids_with_data
+        ]
 
         renameddata = rename.(data.data, newnames)
 
-        basindata = outerjoin(renameddata...; on=:month)
+        basindata = outerjoin(renameddata...; on = :month)
 
         sort!(basindata, :month)
 
-        basinmean = select!(basindata, :month, (Regex.(varnames).=>ByRow((x...)->mean(skipmissing(x))).=>varnames)...)
+        basinmean = select!(
+            basindata,
+            :month,
+            (Regex.(varnames) .=> ByRow((x...) -> mean(skipmissing(x))) .=> varnames)...,
+        )
         display((basin, eratype))
         println()
-        display(round.(basinmean; digits=1))
+        display(round.(basinmean; digits = 1))
     end
 end
