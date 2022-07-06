@@ -54,7 +54,7 @@ for (eratype, erafile) in zip(ERA.eratypes, ERA.erafiles)
         lims = (minimum(minimum.((gamma_swe, mean_era_swe))) -1, maximum(maximum.((gamma_swe, mean_era_swe))) +1)
 
         myplot = scatter(gamma_swe, mean_era_swe; title="NOHRSC vs. ERA5 $eratype SWE Scatter, Flight Line: $fline",
-                    xlabel = "NOHRSC SWE (in.)", ylabel = "ERA5 SWE (in.)", label="", aspect=:equal,
+                    xlabel = "NOHRSC SWE (in.)", ylabel = "ERA5 SWE (in.)", label="", aspect_ratio=:equal,
                     xlims = lims, ylims = lims, titlefontsize = 12)
         annotations = tuple.(gamma_swe, mean_era_swe, year.(fline_measurements.date[valid_time_idxs]))
         plot!(myplot; annotate = annotations)

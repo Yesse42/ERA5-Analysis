@@ -28,6 +28,7 @@ for network in ERA.networktypes
     end
 
     #Now recover the basin from the ID
+    display(basin_to_id)
     basin_from_id = Dict([id=>basin for (basin, ids) in collect(pairs(basin_to_id)) for id in ids])
 
     jldsave("../data/cleansed/$(network)_basin_to_id.jld2", basin_to_id=basin_to_id)
