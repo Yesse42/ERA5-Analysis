@@ -1,7 +1,28 @@
 using CSV, DataFrames, Dates, Dictionaries, AxisArrays, StatsBase, AxisArrays, JLD2
 burrowactivate()
 import ERA5Analysis as ERA
-nrcsdatadir = "$(ERA.NRCSDATA)/cleansed/"
+
+function load_era_data(eradatadir, id)
+    #Skip if there is no extracted point there due to glaciation for either ERA5 type
+    if !all(isfile.(joinpath.(eradatadir, ERA.eratypes, "$id.csv")))
+        return missing
+    end
+
+    #Now filter for the name of the column we want; it should have SWE and this ID in it
+
+    eras = DataFrame[]
+    for eratype in ERA.eratypes
+        times = CSV.read(joinpath(eradatadir, eratype, "times.csv"), DataFrame)
+        data = CSV.read(joinpath(eradatadir, eratype, "$id.csv"), DataFrame)
+        #Set to midnight for later joining
+        times.datetime .-= Hour(12)
+        #Convert to mm
+        data.sd .*= 1e3
+        eradata = rename!(hcat(times, data), [:datetime, Symbol(eratype)])
+        push!(eras, eradata)
+    end
+    return eras
+end
 
 function compare_with_ERA(;
     station_path,
@@ -10,39 +31,24 @@ function compare_with_ERA(;
     monthlyname::Symbol,
     id_colname = :ID,
     savedir = "../data",
+    eradatadir,
 )
-    eradatadir = "$(ERA.ERA5DATA)/extracted_points/"
+    stations = CSV.read(station_meta_path, DataFrame)
 
-    stations = CSV.read(station_path, DataFrame)
+    station_data = CSV.read(station_path, DataFrame)
 
-    station_data = CSV.read(station_meta_path, DataFrame)
+    station_data.datetime = DateTime.(station_data.datetime)
 
-    station_names = stations[!, id_colname]
     eratypes = ERA.eratypes
     data_by_station = Dictionary()
-    for id in stations.ID
-
-        #Skip if there is no extracted point there due to glaciation for either ERA5 type
-        if !all(isfile.(joinpath.(eradatadir, eratypes, "$id.csv")))
-            continue
-        end
-
-        #Now filter for the name of the column we want; it should have SWE and this ID in it
+    for id in stations[:, id_colname]
         colname = "SWE_$id"
 
         this_station_data = select(station_data, :datetime, colname => :Station)
 
-        eras = DataFrame[]
-        for eratype in ["Land", "Base"]
-            times = CSV.read(joinpath(eradatadir, eratype, "times.csv"), DataFrame)
-            data = CSV.read(joinpath(eradatadir, eratype, "$id.csv"), DataFrame)
-            #Set to midnight for later joining
-            times.datetime .-= Hour(12)
-            #Convert to mm
-            data.sd .*= 1e3
-            eradata = rename!(hcat(times, data), [:datetime, Symbol(eratype)])
-            push!(eras, eradata)
-        end
+        eras = load_era_data(eradatadir, id)
+
+        ismissing(eras) && continue
 
         outdf = dropmissing(innerjoin(this_station_data, eras...; on = :datetime))
         if isempty(outdf)
@@ -57,13 +63,16 @@ function compare_with_ERA(;
     analysisarray = Array{Any}(undef, length.((data_by_station, eratypes)))
     labeled_data_array = AxisArray(
         analysisarray;
-        station = collect(keys(data_by_station)),
+        station = string.(collect(keys(data_by_station))),
         eratype = eratypes,
     )
 
     dailydata = Array{Any}(undef, length.((data_by_station, eratypes)))
-    labeled_daily =
-        AxisArray(dailydata; station = collect(keys(data_by_station)), eratype = eratypes)
+    labeled_daily = AxisArray(
+        dailydata;
+        station = string.(collect(keys(data_by_station))),
+        eratype = eratypes,
+    )
 
     rmsd(diffarr) = sqrt(sum(x^2 for x in diffarr) / length(diffarr))
 
@@ -97,8 +106,9 @@ function compare_with_ERA(;
             end
             #Now calculate the differences, differences in anomalies, and differences in percent of normal
             groupcolswithtime = vcat(groupingcols, ["datetime"])
-            diffdata = transform(
+            diffdata = select(
                 data,
+                :datetime,
                 groupingcols => ByRow(-) => :era_station_diff,
                 groupcolswithtime =>
                     ByRow(
@@ -125,9 +135,10 @@ function compare_with_ERA(;
                 groupcols .=> rmsd .=> groupcols .* "_RMSD",
             )
             analysisarray[i, j] = outerjoin(monthstats, month_diff_stats; on = :month)
+            dailydata[i, j] = outerjoin(data, diffdata; on = :datetime)
         end
     end
 
     jldsave("$savedir/$dailyname.jld2"; dailyname => labeled_daily)
-    return jldsave("$savedir/$monthlyname.jld2"; monthlyname = labeled_data_array)
+    return jldsave("$savedir/$monthlyname.jld2"; monthlyname => labeled_data_array)
 end
