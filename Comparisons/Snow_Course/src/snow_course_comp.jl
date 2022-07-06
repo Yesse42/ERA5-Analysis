@@ -44,6 +44,9 @@ end
 analysisarray = Array{Any}(undef, length.((data_by_station, eratypes)))
 labeled_data_array = AxisArray(analysisarray, station = collect(keys(data_by_station)), eratype = eratypes)
 
+dailydata = Array{Any}(undef, length.((data_by_station, eratypes)))
+labeled_daily = AxisArray(dailydata, station = collect(keys(data_by_station)), eratype = eratypes)
+
 rmsd(diffarr) = sqrt(sum(x^2 for x in diffarr)/length(diffarr))
 
 for (i,(station, data)) in enumerate(zip(keys(data_by_station), data_by_station))
