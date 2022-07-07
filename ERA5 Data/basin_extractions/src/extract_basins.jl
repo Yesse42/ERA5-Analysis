@@ -1,12 +1,13 @@
-burrowactivate
+cd(@__DIR__)
+burrowactivate()
 using Shapefile, DataFrames, CSV, NCDatasets, Dictionaries, PolygonOps, StaticArrays
+import ERA5Analysis as ERA
 
-HUC6_path = "../data/HUC_Shapes/WBDHU6.shp"
-HUC8_path = "../data/HUC_Shapes/WBDHU8.shp"
+HUC6_path, HUC8_path = joinpath.("$(ERA.BASINDATA)/HUC_Shapes", "WBDHU".*["6","8"].*".shp")
 
-eratypes=["Base","Land"]
-eradirs = ["ERA5-SD-1979-2022-CREATE-2022-06-16.nc", "ERA5-Land-SD-1979-2022-DL-2022-6-15.nc"]
-era5dirs = "../../".*eratypes.*"/".*eradirs
+eratypes=ERA.eratypes
+eradirs = ERA.erafiles
+era5dirs = "$(ERA.ERA5DATA)/".*eratypes.*"/".*eradirs
 #Load in the netcdf data now
 datasets = Dictionary(eratypes, NCDataset.(era5dirs, "r"))
 lats =  getindex.(getindex.(datasets, "latitude"),:)
@@ -23,11 +24,9 @@ lonlats = Dictionary(eratypes, [SVector.(lon, lat') for (lon,lat) in zip(lons,la
 
 shapes = Dictionary([6,8],DataFrame.(Shapefile.Table.([HUC6_path, HUC8_path])))
 
-include("../../../NRCS Cleansing/data/wanted_stations.jl")
-
 #For each eratype, extract the indices of valid era5 points in the basin using a point in lat-lon polygon method
 for eratype in eratypes
-    for (basins, basinname) in zip(allowed_ids, basin_names)
+    for (basins, basinname) in zip(ERA.allowed_hucs, ERA.basin_names)
         allowed_points = SVector{2, Int}[]
         for basin in basins
             basinlen = length(basin)
