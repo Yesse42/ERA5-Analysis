@@ -33,15 +33,11 @@ for (eratype, erafile) in zip(ERA.eratypes, ERA.erafiles)
         era_points = CartesianIndex.(flightline_points[fline])
 
         #Now get the era5 time indices corresponding to each flight's time
-        begintime = first(eratime)
-        timestep = Millisecond(Day(1))
-        timearr = similar(fline_measurements.date)
-        time_index(time) = (time - begintime) ÷ timestep + 1
-        time_indices = time_index.(fline_measurements.date)
+        time_indices = searchsorted.(Ref(eratime), fline_measurements.date)
 
         #Discard any out of bounds measurements
-        valid_time_idxs = 1 .<= time_indices .<= size(sd, 3)
-        time_indices = time_indices[valid_time_idxs]
+        valid_time_idxs = (!isempty).(time_indices)
+        time_indices = only.(time_indices[valid_time_idxs])
         era_measurements = sd[era_points, time_indices]
         era_measurements .*= meter_to_inch
 
