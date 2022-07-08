@@ -11,3 +11,5 @@ eratypes = ["Base", "Land"]
 networktypes = ["SNOTEL", "Snow_Course"]
 erafiles =
     ["ERA5-SD-1979-2022-CREATE-2022-06-16.nc", "ERA5-Land-SD-1979-2022-DL-2022-6-15.nc"]
+
+special_snotels = string.([954, 949, 1189, 1182, 1096])
