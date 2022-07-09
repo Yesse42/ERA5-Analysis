@@ -1,10 +1,9 @@
 include(joinpath(@__DIR__, "../comparison_constants.jl"))
 
 function load_era(eradatadir, eratype, id)
-    #Skip if there is no extracted point there due to glaciation for either ERA5 type
-    #=if !isfile(joinpath(eradatadir, eratype, "$id.csv"))
+    if !isfile(joinpath(eradatadir, eratype, "$id.csv"))
         return missing
-    end=#
+    end
 
     times = CSV.read(joinpath(eradatadir, eratype, "times.csv"), DataFrame)
     data = CSV.read(joinpath(eradatadir, eratype, "$id.csv"), DataFrame)
