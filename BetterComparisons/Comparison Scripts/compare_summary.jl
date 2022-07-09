@@ -1,11 +1,12 @@
-using CSV, DataFrames, Dates, Dictionaries, AxisArrays, StatsBase, AxisArrays, JLD2, Missings
+using CSV,
+    DataFrames, Dates, Dictionaries, AxisArrays, StatsBase, AxisArrays, JLD2, Missings
 cd(@__DIR__)
 burrowactivate()
 import ERA5Analysis as ERA
 
 @enum Messages StationIsEmpty
 
-StatsBase.rmsd(x) = sqrt(sum(x_i^2 for x_i in x)/length(x))
+StatsBase.rmsd(x) = sqrt(sum(x_i^2 for x_i in x) / length(x))
 
 function comparison_summary(
     data,
@@ -14,7 +15,8 @@ function comparison_summary(
     normal_times = (1991, 2020),
     anom_stat = "median",
 )
-    comparecols = string.(comparecols); timecol = string(timecol)
+    comparecols = string.(comparecols)
+    timecol = string(timecol)
 
     withmonth = transform(data, timecol => ByRow(month) => :month)
     #1991-2020 normals
@@ -25,7 +27,12 @@ function comparison_summary(
     end
     groupmonth = groupby(withmonth, :month)
 
-    mystat(stat) = f(x) = if all(ismissing.(x)) return missing else return stat(filter(!ismissing, x)) end
+    mystat(stat) = f(x) =
+        if all(ismissing.(x))
+            return missing
+        else
+            return stat(filter(!ismissing, x))
+        end
     #Now get mean and median values
     monthstats = combine(
         groupmonth,
@@ -42,23 +49,26 @@ function comparison_summary(
     end
     #Now calculate the differences, differences in anomalies, and differences in percent of normal
     comparecols_time = [[comparecol; timecol] for comparecol in comparecols]
-    anomfuncs = [((x,t)->x-getmonthstat(t, col)) for col in comparecols]
-    pomfuncs = [((x,t)->100x/getmonthstat(t, col)) for col in comparecols]
-    diffdata = transform(data, (comparecols_time.=>ByRow.(anomfuncs).=>comparecols.*"_anom")..., 
-                (comparecols_time.=>ByRow.(pomfuncs).=>comparecols.*"_pom")...)
+    anomfuncs = [((x, t) -> x - getmonthstat(t, col)) for col in comparecols]
+    pomfuncs = [((x, t) -> 100x / getmonthstat(t, col)) for col in comparecols]
+    diffdata = transform(
+        data,
+        (comparecols_time .=> ByRow.(anomfuncs) .=> comparecols .* "_anom")...,
+        (comparecols_time .=> ByRow.(pomfuncs) .=> comparecols .* "_pom")...,
+    )
     transform!(
         diffdata,
         comparecols => ByRow(-) => :raw_diff,
-        comparecols.*"_anom" => ByRow(-) => :anomaly_diff,
-        comparecols.*"_pom" => ByRow(-) => :pom_diff,
+        comparecols .* "_anom" => ByRow(-) => :anomaly_diff,
+        comparecols .* "_pom" => ByRow(-) => :pom_diff,
     )
     #Now calculate the mean differences and rmsd by month, for all available times, not just 1991-2020
-    my2argstat(stat) = function f(x,y) 
+    my2argstat(stat) = function f(x, y)
         notmiss = (!).(ismissing.(x) .|| ismissing.(y))
-        if all((!).(notmiss)) 
-            return missing 
-        else 
-            return stat(x[notmiss], y[notmiss]) 
+        if all((!).(notmiss))
+            return missing
+        else
+            return stat(x[notmiss], y[notmiss])
         end
     end
 
@@ -70,8 +80,8 @@ function comparison_summary(
         groupcols .=> mystat(mean) .=> groupcols .* "_mean",
         groupcols .=> mystat(rmsd) .=> groupcols .* "_rmsd",
         comparecols => my2argstat(cor) => "corr",
-        comparecols.*"_anom" => my2argstat(cor) => "anom_corr",
-        comparecols.*"_pom" => my2argstat(cor) => "pom_corr"
+        comparecols .* "_anom" => my2argstat(cor) => "anom_corr",
+        comparecols .* "_pom" => my2argstat(cor) => "pom_corr",
     )
 
     diff_month_stats = outerjoin(monthstats, month_diff_stats; on = :month)
@@ -90,7 +100,9 @@ function comparison_summary(
         comparecols .=> median .=> comparecols .* "_median",
     )
 
-    return (dailydata = diffdata,
-            monthperioddata = monthperiodstats,
-            monthmeandata = diff_month_stats)
+    return (
+        dailydata = diffdata,
+        monthperioddata = monthperiodstats,
+        monthmeandata = diff_month_stats,
+    )
 end

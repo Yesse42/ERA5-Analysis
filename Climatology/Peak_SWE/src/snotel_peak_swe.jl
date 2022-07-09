@@ -18,15 +18,21 @@ for snotel in ERA.special_snotels
     display((name, snotel))
     eradat = load_era.(eradir, ERA.eratypes, snotel)
     snodat = load_snotel(snotel)
-    combodat = outerjoin(snodat, eradat...; on=:datetime)
+    combodat = outerjoin(snodat, eradat...; on = :datetime)
     #Now group by year and calculate the snow off dates
-    datacols = filter!(x->!occursin("time", x), names(combodat))
+    datacols = filter!(x -> !occursin("time", x), names(combodat))
     #Add in the snow bools and a year column to group on
-    with_year = transform!(combodat, :datetime=>ByRow(year)=>:year)
+    with_year = transform!(combodat, :datetime => ByRow(year) => :year)
     group_year = groupby(with_year, :year)
     naormiss(x) = ismissing(x) || isnan(x)
-    myskipmiss_na(x) = if all(naormiss.(x)) return [NaN] else return Base.Iterators.filter(!naormiss, x) end
-    max_swe = combine(group_year, (datacols.=>(x->maximum(myskipmiss_na(x))).=>datacols)...)
+    myskipmiss_na(x) =
+        if all(naormiss.(x))
+            return [NaN]
+        else
+            return Base.Iterators.filter(!naormiss, x)
+        end
+    max_swe =
+        combine(group_year, (datacols .=> (x -> maximum(myskipmiss_na(x))) .=> datacols)...)
 
     max_swe_data = Array(max_swe[:, datacols])
 

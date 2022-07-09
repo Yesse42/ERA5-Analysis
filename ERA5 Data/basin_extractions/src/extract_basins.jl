@@ -3,26 +3,31 @@ burrowactivate()
 using Shapefile, DataFrames, CSV, NCDatasets, Dictionaries, PolygonOps, StaticArrays
 import ERA5Analysis as ERA
 
-HUC6_path, HUC8_path = joinpath.("$(ERA.BASINDATA)/HUC_Shapes", "WBDHU".*["6","8"].*".shp")
+HUC6_path, HUC8_path =
+    joinpath.("$(ERA.BASINDATA)/HUC_Shapes", "WBDHU" .* ["6", "8"] .* ".shp")
 
-eratypes=ERA.eratypes
+eratypes = ERA.eratypes
 eradirs = ERA.erafiles
-era5dirs = "$(ERA.ERA5DATA)/".*eratypes.*"/".*eradirs
+era5dirs = "$(ERA.ERA5DATA)/" .* eratypes .* "/" .* eradirs
 #Load in the netcdf data now
 datasets = Dictionary(eratypes, NCDataset.(era5dirs, "r"))
-lats =  getindex.(getindex.(datasets, "latitude"),:)
-lons =  getindex.(getindex.(datasets, "longitude"),:)
-sds = getindex.(getindex.(datasets, "sd"),:)
-for sd in sds sd[ismissing.(sd)] .= NaN end
-function isglacier(sd_arr; glacier_thresh=0.95)
-    glacier_mask = (sum(sd_arr .> 0; dims=3) ./ size(sd_arr, 3)) .>= glacier_thresh
+lats = getindex.(getindex.(datasets, "latitude"), :)
+lons = getindex.(getindex.(datasets, "longitude"), :)
+sds = getindex.(getindex.(datasets, "sd"), :)
+for sd in sds
+    sd[ismissing.(sd)] .= NaN
+end
+function isglacier(sd_arr; glacier_thresh = 0.95)
+    return glacier_mask = (sum(sd_arr .> 0; dims = 3) ./ size(sd_arr, 3)) .>= glacier_thresh
 end
 glacierarrs = Dictionary(eratypes, isglacier.(sds))
 #Set missing areas to show as glacier so they are excluded as well
-for (glaciermask, sd) in zip(glacierarrs, sds) glaciermask[ismissing.(sd[:,:,1]), 1] .= true end
-lonlats = Dictionary(eratypes, [SVector.(lon, lat') for (lon,lat) in zip(lons,lats)])
+for (glaciermask, sd) in zip(glacierarrs, sds)
+    glaciermask[ismissing.(sd[:, :, 1]), 1] .= true
+end
+lonlats = Dictionary(eratypes, [SVector.(lon, lat') for (lon, lat) in zip(lons, lats)])
 
-shapes = Dictionary([6,8],DataFrame.(Shapefile.Table.([HUC6_path, HUC8_path])))
+shapes = Dictionary([6, 8], DataFrame.(Shapefile.Table.([HUC6_path, HUC8_path])))
 
 #For each eratype, extract the indices of valid era5 points in the basin using a point in lat-lon polygon method
 for eratype in eratypes
@@ -32,11 +37,15 @@ for eratype in eratypes
             basinlen = length(basin)
             basinshapes = shapes[basinlen]
             #Now find the specific basin in the shapetable
-            basin_idx = findfirst( ==(basin), basinshapes[!, "huc$basinlen"])
+            basin_idx = findfirst(==(basin), basinshapes[!, "huc$basinlen"])
             #and use that to grab the polygon
             my_polygon = basinshapes[basin_idx, :geometry]
             #And extract the lat and lon of the polygon
-            poly_verts = SVector{2, Float32}.(getproperty.(my_polygon.points, :x), getproperty.(my_polygon.points, :y))
+            poly_verts =
+                SVector{
+                    2,
+                    Float32,
+                }.(getproperty.(my_polygon.points, :x), getproperty.(my_polygon.points, :y))
             if poly_verts[end] ≠ poly_verts[begin]
                 push!(poly_verts, poly_verts[1])
             end
@@ -45,11 +54,15 @@ for eratype in eratypes
             erapoints = lonlats[eratype]
             glacier_mask = glacierarrs[eratype]
             for era_point_idx in CartesianIndices(erapoints)
-                if inpolygon(erapoints[era_point_idx], poly_verts) == 1 && !glacier_mask[era_point_idx]
+                if inpolygon(erapoints[era_point_idx], poly_verts) == 1 &&
+                   !glacier_mask[era_point_idx]
                     push!(allowed_points, SVector(Tuple(era_point_idx)...))
                 end
             end
         end
-        CSV.write("../$eratype/$(basinname)_era_points.csv", DataFrame(lonidx = first.(allowed_points), latidx = last.(allowed_points)))
+        CSV.write(
+            "../$eratype/$(basinname)_era_points.csv",
+            DataFrame(; lonidx = first.(allowed_points), latidx = last.(allowed_points)),
+        )
     end
 end

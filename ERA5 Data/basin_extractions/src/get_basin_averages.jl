@@ -17,7 +17,10 @@ for (eratype, eradir) in zip(eratypes, era5dirs)
         basin_coord_df = CSV.read("../$eratype/$(basin)_era_points.csv", DataFrame)
         idxs = CartesianIndex.(basin_coord_df.lonidx, basin_coord_df.latidx)
         averages = [mean(skipmissing(sd[idxs, i])) for i in axes(sd, 3)]
-        CSV.write("../$eratype/$(basin)_sd_avgs.csv", DataFrame(datetime=times, sd_avg=averages))
+        CSV.write(
+            "../$eratype/$(basin)_sd_avgs.csv",
+            DataFrame(; datetime = times, sd_avg = averages),
+        )
     end
     close(ds)
 end

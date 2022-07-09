@@ -20,7 +20,7 @@ function snow_off_single_year(snow_bool, dates; min_snow)
             continue
         elseif all(snow_bool[(idx - min_snow + 1):idx] .== 1)
             #It doesn't count if it happens after August
-            month(dates[idx+1])>=9 && continue
+            month(dates[idx + 1]) >= 9 && continue
             current_off = idx
         end
     end

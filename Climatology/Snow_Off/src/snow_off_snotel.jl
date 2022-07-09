@@ -17,24 +17,39 @@ for snotel in ERA.special_snotels
     display((name, snotel))
     eradat = load_era.(eradir, ERA.eratypes, snotel)
     snodat = load_snotel(snotel)
-    combodat = outerjoin(snodat, eradat...; on=:datetime)
+    combodat = outerjoin(snodat, eradat...; on = :datetime)
     #Now group by year and calculate the snow off dates
-    datacols = filter!(x->!occursin("time", x), names(combodat))
+    datacols = filter!(x -> !occursin("time", x), names(combodat))
     data_with_time = [[datacol; "datetime"] for datacol in datacols]
     #Add in the snow bools and a year column to group on
-    mistona(x) = if ismissing(x) return NaN else return x end
-    with_year = transform!(combodat, datacols.=>(x->mistona.((x.>0) .+ 0)).=>datacols, :datetime=>ByRow(year)=>:year)
+    mistona(x) =
+        if ismissing(x)
+            return NaN
+        else
+            return x
+        end
+    with_year = transform!(
+        combodat,
+        datacols .=> (x -> mistona.((x .> 0) .+ 0)) .=> datacols,
+        :datetime => ByRow(year) => :year,
+    )
     group_year = groupby(with_year, :year)
-    snow_off = combine(group_year, (data_with_time.=>((x,y)->snow_off_single_year(x,y;min_snow=30)).=>datacols)...)
+    snow_off = combine(
+        group_year,
+        (
+            data_with_time .=>
+                ((x, y) -> snow_off_single_year(x, y; min_snow = 30)) .=> datacols
+        )...,
+    )
 
     snow_off_data = Array(snow_off[:, datacols])
 
     years = snow_off.year
 
     yticks =
-    round(minimum(filter(!isnan, snow_off_data))):5:round(
-        maximum(filter(!isnan, snow_off_data)),
-    )
+        round(minimum(filter(!isnan, snow_off_data))):5:round(
+            maximum(filter(!isnan, snow_off_data)),
+        )
     yticklabel = Dates.format.((Date(2021) .+ Day.(yticks .- 1)), dateformat"mm/dd")
     myp = plot(
         years,
