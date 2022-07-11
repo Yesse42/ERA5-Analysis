@@ -1,3 +1,6 @@
+#Threshold to be considered snowy (in m)
+const is_snow_thresh = 1e-3
+
 function snow_off_single_year(snow_bool, dates; min_snow)
     diffs = snow_bool[2:end] .- snow_bool[1:(end - 1)]
     possible_snow_off_idxs = findall(==(-1), diffs)

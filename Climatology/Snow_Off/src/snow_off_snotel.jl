@@ -28,9 +28,10 @@ for snotel in ERA.special_snotels
         else
             return x
         end
+    #The SNOTEL data is in mm so multiply the snow threshold accordingly
     with_year = transform!(
         combodat,
-        datacols .=> (x -> mistona.((x .> 0) .+ 0)) .=> datacols,
+        datacols .=> (x -> mistona.((x .> is_snow_thresh * 1e3) .+ 0)) .=> datacols,
         :datetime => ByRow(year) => :year,
     )
     group_year = groupby(with_year, :year)

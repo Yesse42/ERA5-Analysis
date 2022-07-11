@@ -7,7 +7,7 @@ include("snow_off_single_year.jl")
 
 function snow_off(sd, times; min_snowy_days_before_snowpack_established)
     nyears = -(year.((times[end], times[begin]))...) + 1
-    is_snow = sd .> 0
+    is_snow = sd .> is_snow_thresh
     dates = Date.(times)
     snowoff_arr = Array{Float64, 3}(undef, (size(sd, 1), size(sd, 2), nyears))
     for i in axes(sd, 1), j in axes(sd, 2)
