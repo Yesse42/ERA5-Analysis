@@ -29,7 +29,6 @@ for network in ERA.networktypes
         stat_funcs = (minimum, mean, maximum) .∘ myskipmiss
         monthly_stats =
             combine(month_group, (swename .=> stat_funcs .=> ["min", "mean", "max"])...)
-        display(monthly_stats)
         dropmissing!(monthly_stats)
 
         #And now plot
