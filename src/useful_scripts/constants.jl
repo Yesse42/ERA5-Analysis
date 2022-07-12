@@ -6,7 +6,7 @@ remote_ids = ["19090101"]
 western_ids = ["190903"]
 norton_coast = ["190501"]
 lynn_canal = ["190103"]
-allowed_hucs = [
+const allowed_hucs = [
     chena_basin_ids,
     copper_ids,
     kenai_ids,
@@ -16,7 +16,7 @@ allowed_hucs = [
     norton_coast,
     lynn_canal
 ]
-basin_names = [
+const basin_names = [
     "Chena",
     "Copper",
     "Kenai",
@@ -26,6 +26,7 @@ basin_names = [
     "Norton Sound",
     "Lynn Canal"
 ]
+const meters_to_inch = 39.3701
 
 ak_bounds = [-171, -129, 50, 72]
 eratypes = ["Base", "Land"]
