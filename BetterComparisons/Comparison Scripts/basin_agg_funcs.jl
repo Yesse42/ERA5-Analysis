@@ -1,5 +1,4 @@
 using CSV, DataFrames, Dates, Dictionaries, AxisArrays, StatsBase, AxisArrays, JLD2
-cd(@__DIR__)
 burrowactivate()
 import ERA5Analysis as ERA
 
@@ -12,7 +11,11 @@ function basin_aggregate(datavec, station_names; timecol = :datetime, aggfunc = 
         (data, name) in zip(datavec, station_names)
     ]
     #Now join all your data together
-    basindata = outerjoin(revised_data...; on = timecol)
+    basindata = if length(datavec) > 1
+        outerjoin(revised_data...; on = timecol)
+    else
+        only(revised_data)
+    end
 
     #Now apply a special aggfunction
     na_or_miss(x) = ismissing(x) || isnan(x)

@@ -3,8 +3,29 @@ copper_ids = ["190201"]
 kenai_ids = ["190203"]
 southeast_ids = ["190705"]
 remote_ids = ["19090101"]
-allowed_hucs = [chena_basin_ids, copper_ids, kenai_ids, southeast_ids, remote_ids]
-basin_names = ["Chena", "Copper", "Kenai", "Southeast Interior", "Northern Interior"]
+western_ids = ["190903"]
+norton_coast = ["190501"]
+lynn_canal = ["190103"]
+allowed_hucs = [
+    chena_basin_ids,
+    copper_ids,
+    kenai_ids,
+    southeast_ids,
+    remote_ids,
+    western_ids,
+    norton_coast,
+    lynn_canal
+]
+basin_names = [
+    "Chena",
+    "Copper",
+    "Kenai",
+    "Southeast Interior",
+    "Northern Interior",
+    "Western Interior",
+    "Norton Sound",
+    "Lynn Canal"
+]
 
 ak_bounds = [-171, -129, 50, 72]
 eratypes = ["Base", "Land"]
