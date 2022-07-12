@@ -11,7 +11,10 @@ function load_era(eradatadir, eratype, id)
     times.datetime = Date.(times.datetime)
     #Convert to mm
     data.sd .*= 1e3
-    eradata = rename!(hcat(times, data), [:datetime, Symbol(eratype)])
+    eradata = rename!(hcat(times, data), [:datetime, :era_swe])
+
+    #1979 is a cursed year, so throw it out
+    filter!(x->year(x.datetime)>1979, eradata)
 
     return eradata
 end
