@@ -1,10 +1,7 @@
 using CSV,
     DataFrames, Dates, Dictionaries, AxisArrays, StatsBase, AxisArrays, JLD2, Missings
-cd(@__DIR__)
 burrowactivate()
 import ERA5Analysis as ERA
-
-@enum Messages StationIsEmpty
 
 StatsBase.rmsd(x) = sqrt(sum(x_i^2 for x_i in x) / length(x))
 
@@ -50,12 +47,13 @@ function comparison_summary(
     #Now calculate the differences, differences in anomalies, and differences in percent of normal
     comparecols_time = [[comparecol; timecol] for comparecol in comparecols]
     anomfuncs = [((x, t) -> x - getmonthstat(t, col)) for col in comparecols]
-    pomfuncs = [((x, t) -> 100x / getmonthstat(t, col)) for col in comparecols]
+    pomfuncs = (((x, t) -> 100x / getmonthstat(t, col)) for col in comparecols)
     diffdata = transform(
         data,
         (comparecols_time .=> ByRow.(anomfuncs) .=> comparecols .* "_anom")...,
         (comparecols_time .=> ByRow.(pomfuncs) .=> comparecols .* "_pom")...,
     )
+    statcols = vec(comparecols .* permutedims(["_anom", "_pom"]))
     transform!(
         diffdata,
         comparecols => ByRow(-) => :raw_diff,
@@ -98,6 +96,7 @@ function comparison_summary(
         groupcols .=> rmsd .=> groupcols .* "_rmsd",
         comparecols .=> mean .=> comparecols .* "_mean",
         comparecols .=> median .=> comparecols .* "_median",
+        statcols .=> mean .=> statcols .* "_mean",
     )
 
     return (
