@@ -8,8 +8,8 @@ const swename = "sd"
 
 for eratype in ERA.eratypes
     files = readdir("../$(eratype)")
-    filter!(x->occursin(".csv", x) && x ≠ "times.csv", files)
-    ids = replace.(files, Ref(".csv"=>""))
+    filter!(x -> occursin(".csv", x) && x ≠ "times.csv", files)
+    ids = replace.(files, Ref(".csv" => ""))
     times = CSV.read("../$(eratype)/times.csv", DataFrame)
     for id in ids
         sd_data = CSV.read("../$(eratype)/$id.csv", DataFrame)

@@ -14,7 +14,7 @@ const allowed_hucs = [
     remote_ids,
     western_ids,
     norton_coast,
-    lynn_canal
+    lynn_canal,
 ]
 const basin_names = [
     "Chena",
@@ -24,7 +24,7 @@ const basin_names = [
     "Northern Interior",
     "Western Interior",
     "Norton Sound",
-    "Lynn Canal"
+    "Lynn Canal",
 ]
 const meters_to_inch = 39.3701
 

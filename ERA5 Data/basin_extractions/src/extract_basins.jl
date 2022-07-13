@@ -32,7 +32,7 @@ basin_to_polys = jldopen(joinpath(ERA.BASINDATA, "basin_to_polys.jld2"))["basin_
 function kernel_func!(allowed_points, erapoints, polys, glacier_mask)
     for era_point_idx in CartesianIndices(erapoints)
         if any(inpolygon.(Ref(erapoints[era_point_idx]), polys) .== 1) &&
-            !glacier_mask[era_point_idx]
+           !glacier_mask[era_point_idx]
             push!(allowed_points, SVector(Tuple(era_point_idx)...))
         end
     end

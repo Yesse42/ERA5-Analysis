@@ -14,7 +14,7 @@ function load_era(eradatadir, eratype, id)
     eradata = rename!(hcat(times, data), [:datetime, :era_swe])
 
     #1979 is a cursed year, so throw it out
-    filter!(x->year(x.datetime)>1979, eradata)
+    filter!(x -> year(x.datetime) > 1979, eradata)
 
     return eradata
 end
