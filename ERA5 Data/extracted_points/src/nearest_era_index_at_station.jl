@@ -14,7 +14,7 @@ end
 
 #A special distance function which weights both elevation differences and horizontal ones
 #100m elevation diff is equal to a 5km distance diff
-weight_func(eldiff, dist) = eldiff / 100 + dist / 5000
+weight_func(eldiff, dist) = eldiff / 100 + (dist / 5000)
 
 #Load in the stations too
 stations =
@@ -43,7 +43,7 @@ for (eratype, erafile) in zip(ERA.eratypes, ERA.erafiles)
         era_point_el = Float16[],
     )
     for (statdata, I) in zip(eachrow(stations), nearest_neighbors)
-        offset = CartesianIndex(1, 1)
+        offset = CartesianIndex(3, 1)
         near_idxs = (I - offset):(I + offset)
 
         elev_data = elevations[near_idxs]
