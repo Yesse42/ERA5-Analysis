@@ -6,17 +6,13 @@ import ERA5Analysis as ERA
 #We just want to plot every SNOTEL's monthly min, mean, and max and all avilable Snow Course observations to ensure
 #that nothing fishy is going on
 
-get_snow_course(data, id) = rename!(data[:, ["datetime_$id", "SWE_$id"]], ["datetime", "SWE_$id"])
-get_snotel(data, id) = data[:, ["datetime", "SWE_$id"]]
-
-for (network, get_specific_station_func)  in zip(ERA.networktypes, (get_snotel, get_snow_course))
+for network in ERA.networktypes
     data = CSV.read("../data/cleansed/$(network)_Data.csv", DataFrame)
     metadata = CSV.read("../data/cleansed/$(network)_Metadata.csv", DataFrame)
     for row in eachrow(metadata)
         station = string(row.ID)
         swename = "SWE_$station"
-        stationdata = get_specific_station_func(data, station)
-        dropmissing!(stationdata)
+        stationdata = data[:, ["datetime", swename]]
 
         #Now groupby month
         transform!(
