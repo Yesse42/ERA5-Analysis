@@ -40,8 +40,10 @@ for (eratype, erafile) in zip(ERA.eratypes, ERA.erafiles)
     latgrid = ones(length(lon)) .* lat'
     for basin in ERA.basin_names
         fig=plt.figure()
-        ax = fig.add_subplot(1,1,1,projection = ccrs.AlbersEqualArea(central_longitude = -150,
-            standard_parallels = (57,69)))
+        goodproj = ccrs.AlbersEqualArea(central_longitude = -147,
+        standard_parallels = (57,69))
+
+        ax = fig.add_subplot(1,1,1,projection = goodproj)
 
         #Get the basin boundaries and plot them
         polys = basin_to_polys[basin]
