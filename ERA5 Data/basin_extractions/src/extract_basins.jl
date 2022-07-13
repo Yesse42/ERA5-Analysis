@@ -1,6 +1,6 @@
 cd(@__DIR__)
 burrowactivate()
-using Shapefile, DataFrames, CSV, NCDatasets, Dictionaries, PolygonOps, StaticArrays
+using DataFrames, CSV, NCDatasets, Dictionaries, PolygonOps, StaticArrays, JLD2
 import ERA5Analysis as ERA
 
 HUC6_path, HUC8_path =
@@ -27,41 +27,29 @@ for (glaciermask, sd) in zip(glacierarrs, sds)
 end
 lonlats = Dictionary(eratypes, [SVector.(lon, lat') for (lon, lat) in zip(lons, lats)])
 
-shapes = Dictionary([6, 8], DataFrame.(Shapefile.Table.([HUC6_path, HUC8_path])))
+basin_to_polys = jldopen(joinpath(ERA.BASINDATA, "basin_to_polys.jld2"))["basin_to_polys"]
+
+function kernel_func!(allowed_points, erapoints, polys, glacier_mask)
+    for era_point_idx in CartesianIndices(erapoints)
+        if any(inpolygon.(Ref(erapoints[era_point_idx]), polys) .== 1) &&
+            !glacier_mask[era_point_idx]
+            push!(allowed_points, SVector(Tuple(era_point_idx)...))
+        end
+    end
+end
 
 #For each eratype, extract the indices of valid era5 points in the basin using a point in lat-lon polygon method
 for eratype in eratypes
-    for (basins, basinname) in zip(ERA.allowed_hucs, ERA.basin_names)
+    for basin in ERA.basin_names
         allowed_points = SVector{2, Int}[]
-        for basin in basins
-            basinlen = length(basin)
-            basinshapes = shapes[basinlen]
-            #Now find the specific basin in the shapetable
-            basin_idx = findfirst(==(basin), basinshapes[!, "huc$basinlen"])
-            #and use that to grab the polygon
-            my_polygon = basinshapes[basin_idx, :geometry]
-            #And extract the lat and lon of the polygon
-            poly_verts =
-                SVector{
-                    2,
-                    Float32,
-                }.(getproperty.(my_polygon.points, :x), getproperty.(my_polygon.points, :y))
-            if poly_verts[end] ≠ poly_verts[begin]
-                push!(poly_verts, poly_verts[1])
-            end
+        polys = basin_to_polys[basin]
 
-            #And now loop through every point and check if it's in the basin
-            erapoints = lonlats[eratype]
-            glacier_mask = glacierarrs[eratype]
-            for era_point_idx in CartesianIndices(erapoints)
-                if inpolygon(erapoints[era_point_idx], poly_verts) == 1 &&
-                   !glacier_mask[era_point_idx]
-                    push!(allowed_points, SVector(Tuple(era_point_idx)...))
-                end
-            end
-        end
+        #And now loop through every point and check if it's in the basin
+        erapoints = lonlats[eratype]
+        glacier_mask = glacierarrs[eratype]
+        kernel_func!(allowed_points, erapoints, polys, glacier_mask)
         CSV.write(
-            "../$eratype/$(basinname)_era_points.csv",
+            "../$eratype/$(basin)_era_points.csv",
             DataFrame(; lonidx = first.(allowed_points), latidx = last.(allowed_points)),
         )
     end
