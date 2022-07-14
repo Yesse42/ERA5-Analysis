@@ -86,8 +86,9 @@ for basin in ERA.basin_names
         pretty_offsets = string.(Tuple.(offsets))
         pretty_weights = string.(relweights)
         myc = :Spectral_11
-        p1 = heatmap(pretty_weights,pretty_offsets,rmsd_arr; title="% of Median Diff RMSD", c = myc, ylabel="Offset", xlabel = "1m of elevation equivalent to this many meters of distance")
-        p2 = heatmap(pretty_weights,pretty_offsets,nmiss_arr; title="# Missing", c = myc, ylabel="Offset", xlabel = "1m of elevation equivalent to this many meters of distance")
+        shared_kwargs = (c = myc, ylabel="Offset", xlabel = "1m of elevation equivalent to this many meters of distance", aspect_ratio = :equal)
+        p1 = heatmap(pretty_weights,pretty_offsets,rmsd_arr; title="% of Median Diff RMSD", shared_kwargs...)
+        p2 = heatmap(pretty_weights,pretty_offsets,nmiss_arr; title="# Missing", shared_kwargs...)
         p = plot(p1, p2, layout = (2,1), plot_title="ERA5-$eratype S. Course in $basin Basin")
         savefig(p, "../vis/$eratype/$(basin)_$(eratype)_sensitivity_summary.png")
     end
