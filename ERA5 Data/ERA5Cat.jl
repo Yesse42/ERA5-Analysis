@@ -30,7 +30,7 @@ interweaved = choose_expver.(datasets[2]["sd"][:, :, 1, :], datasets[2]["sd"][:,
 newsd = cat(Array.((datasets[1]["sd"], interweaved))...; dims = 3)
 
 #Now create the new dataset
-fname = "ERA5 Data/Base/ERA5-SD-1979-2022-CREATE-$(Date(Dates.now())).nc"
+fname = "ERA5 Data/Base/ERA5-SD-1979-2022-CREATE-2022-06-16.nc"
 if isfile(fname)
     rm(fname)
 end
