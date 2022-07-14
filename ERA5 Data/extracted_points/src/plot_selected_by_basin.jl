@@ -26,7 +26,6 @@ stationtype_ids = (basin_to_snotel, basin_to_snow_course)
 
 for (eratype, erafile) in zip(ERA.eratypes, ERA.erafiles)
     era_chosen_points = CSV.read("../data/$(eratype)_chosen_points.csv", DataFrame)
-    display(era_chosen_points)
 
     era_data = Dataset("../data/$(eratype)_aligned_elevations.nc")
     elev = era_data["elevation_m"][:]
@@ -135,6 +134,7 @@ for (eratype, erafile) in zip(ERA.eratypes, ERA.erafiles)
                     transform = ccrs.PlateCarree(),
                     color = mycolor,
                     s = 30,
+                    alpha = 0.7
                 )
                 arrow_offset =
                     (lon[era_id_data.lonidx], lat[era_id_data.latidx]) .- stat_point
@@ -143,6 +143,7 @@ for (eratype, erafile) in zip(ERA.eratypes, ERA.erafiles)
                     transform = ccrs.PlateCarree(),
                     color = "orange",
                     s = 20,
+                    alpha=0.7
                 )
                 #Draw arrow to ERA point
                 ax.arrow(
@@ -150,6 +151,7 @@ for (eratype, erafile) in zip(ERA.eratypes, ERA.erafiles)
                     arrow_offset...;
                     transform = ccrs.PlateCarree(),
                     linewidth = 1,
+                    alpha=0.7
                 )
             end
         end
