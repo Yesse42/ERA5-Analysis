@@ -26,6 +26,7 @@ stationtype_ids = (basin_to_snotel, basin_to_snow_course)
 
 for (eratype, erafile) in zip(ERA.eratypes, ERA.erafiles)
     era_chosen_points = CSV.read("../data/$(eratype)_chosen_points.csv", DataFrame)
+    display(era_chosen_points)
 
     era_data = Dataset("../data/$(eratype)_aligned_elevations.nc")
     elev = era_data["elevation_m"][:]
@@ -67,14 +68,14 @@ for (eratype, erafile) in zip(ERA.eratypes, ERA.erafiles)
         polylat = reduce(vcat, [[point[2] for point in poly] for poly in polys])
         lonbounds, latbounds = (extrema(polylon), extrema(polylat))
         #Get the extent of the plot, with a buffer
-        buff = 0.5 .* (-1, 1)
-        lonbounds = lonbounds .+ buff
+        buff = 1 .* (-1, 1)
+        lonbounds = lonbounds .+ 3 .* buff
         latbounds = latbounds .+ buff
         plotbounds = [lonbounds..., latbounds...]
         #Add another buffer
-        buff = 4 .* buff
+        buff = 2 .* buff
         lonbounds = lonbounds .+ buff
-        latbounds = latbounds .+ buff
+        latbounds = latbounds .+ 3 .* buff
         ax.set_extent(plotbounds; crs = ccrs.PlateCarree())
         ax.gridlines()
         ax.coastlines()
@@ -87,14 +88,7 @@ for (eratype, erafile) in zip(ERA.eratypes, ERA.erafiles)
         ]
         plotmask = CartesianIndex.(era_lonids, permutedims(era_latids))
 
-        #Now contour in the elevation, and add the grid centers as a scatterplot
-        ax.scatter(
-            longrid[plotmask][:],
-            latgrid[plotmask][:];
-            s = 0.125,
-            transform = ccrs.PlateCarree(),
-            color = "fuchsia",
-        )
+        #Now contour in the elevation
 
         #Adapted from https://matplotlib.org/stable/tutorials/colors/colormapnorms.html#sphx-glr-tutorials-colors-colormapnorms-py
         colors_undersea = plt.cm.terrain(np.linspace(0, 0.17, 256))

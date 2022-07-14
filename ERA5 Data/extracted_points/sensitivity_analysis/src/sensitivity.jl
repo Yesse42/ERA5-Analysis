@@ -1,6 +1,6 @@
 cd(@__DIR__)
 burrowactivate()
-using CSV, DataFrames, Dates, NCDatasets, Plots, StaticArrays, Dictionaries, ColorSchemes
+using CSV, DataFrames, Dates, NCDatasets, Plots, StaticArrays, Dictionaries, ColorSchemes, JLD2
 import ERA5Analysis as ERA
 
 include(joinpath(ERA.COMPAREDIR, "Snow_Course", "src", "comparison_machinery.jl"))
@@ -49,12 +49,14 @@ function sensitivity(eratype, erafile, basin, offset, weight_func)
 end
 
 #The offsets of the bounding box used to search for the best fit
-offsets = CartesianIndex.([(0,0), (3, 1), (6, 2)])
+offsets = CartesianIndex.([(0,0), (3, 1), (6, 2), (9,3), (12,4), (15, 5), (18, 6)])
 #The number of meters of distance needed to be equivalent to 1 meter of elevation in the weighting function
-relweights = [40, 100, 500, 1500]
+relweights = [40, 100, 500, 1500, 3000, 5000, 10000]
 weight_funcs = [f(eldiff, dist) = eldiff + dist/weight for weight in relweights]
 
 enu=enumerate
+
+best_weight_offset_dict = Dictionary()
 
 for basin in ERA.basin_names
     for (eratype, erafile) in zip(ERA.eratypes, ERA.erafiles)
@@ -70,12 +72,25 @@ for basin in ERA.basin_names
                 nmiss_arr[i,j] = run_data.nmissing
             end
         end
+        #Get the best rmsd for this basin
+        best_idxs = getindex.(Ref(CartesianIndices(rmsd_arr)), sortperm(vec(rmsd_arr)))
+        #Choose the idx with the lowest rmsd with no missing stations
+        best_idx = Tuple(first(best_index for best_index in best_idxs if nmiss_arr[best_index] == 0))
+
+        #Now put them in a dict
+        insert!(best_weight_offset_dict, (basin, eratype), (offset = offsets[best_idx[1]], weight = relweights[best_idx[2]]))
+
+        #Now plot the results too
         pretty_offsets = string.(Tuple.(offsets))
         pretty_weights = string.(relweights)
         myc = :Spectral_11
-        p1 = heatmap(pretty_weights,pretty_offsets,rmsd_arr; title="ERA5-$eratype S. Course %Median Diff RMSD, $basin", c = myc, ylabel="Offset", xlabel = "1m of elevation equivalent to this many meters of distance")
-        p2 = heatmap(pretty_weights,pretty_offsets,nmiss_arr; title="ERA5-$eratype S. Course # Missing, $basin", c = myc, ylabel="Offset", xlabel = "1m of elevation equivalent to this many meters of distance")
-        savefig(p1, "../vis/$eratype/$(basin)_$(eratype)_RMSD.png")
-        savefig(p2, "../vis/$eratype/$(basin)_$(eratype)_Nmissing.png")
+        p1 = heatmap(pretty_weights,pretty_offsets,rmsd_arr; title="% of Median Diff RMSD", c = myc, ylabel="Offset", xlabel = "1m of elevation equivalent to this many meters of distance")
+        p2 = heatmap(pretty_weights,pretty_offsets,nmiss_arr; title="# Missing", c = myc, ylabel="Offset", xlabel = "1m of elevation equivalent to this many meters of distance")
+        p = plot(p1, p2, layout = (2,1), plot_title="ERA5-$eratype S. Course in $basin Basin")
+        savefig(p, "../vis/$eratype/$(basin)_$(eratype)_sensitivity_summary.png")
     end
 end
+
+#Now save the dict
+jldsave("../data/best_weight_offset_dict.jld2"; best_weight_offset_dict)
+display(best_weight_offset_dict)
