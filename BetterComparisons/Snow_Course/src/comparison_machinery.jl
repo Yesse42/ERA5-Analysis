@@ -1,6 +1,6 @@
 burrowactivate()
 import ERA5Analysis as ERA
-using CSV, DataFrames, Plots, JLD2, WeakRefStrings
+using CSV, DataFrames, Plots, JLD2, Dictionaries
 
 include(joinpath(ERA.COMPAREDIR, "Load Scripts", "load_snow_course.jl"))
 include(joinpath(ERA.COMPAREDIR, "Load Scripts", "load_era.jl"))
@@ -45,5 +45,7 @@ function general_course_compare(eratype, courses; groupfunc=mymonthperiod,
 
     basinmean = basin_aggregate(course_data; timecol = "datetime")
 
-    return if ismissing(basinmean) return missing else return sort!(basinmean, :datetime) end
+    sort!(basinmean, :datetime)
+
+    return if ismissing(basinmean) return missing else return (basindata = basinmean, coursedata = Dictionary(courses, course_data)) end
 end

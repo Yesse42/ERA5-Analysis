@@ -21,7 +21,7 @@ for basin in ERA.basin_names
 
         courses = basin_to_courses[basin]
         basinmean = general_course_compare(eratype, courses;groupfunc=mymonth)
-        push!(eradata, basinmean)
+        push!(eradata, basinmean.basindata)
     end
 
     #Now plot the difference in percent of median and the anomaly difference on separate axes,

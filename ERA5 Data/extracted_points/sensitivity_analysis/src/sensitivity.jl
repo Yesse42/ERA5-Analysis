@@ -40,7 +40,7 @@ function sensitivity(eratype, erafile, basin, offset, weight_func)
     end
 
     #Now pass each station, along with the above functions, into the basin summary generator
-    summary_stats = general_course_compare(eratype, ids; load_course_func = load_snow_course, load_era_func = era5_from_id, groupfunc = mymonth)
+    summary_stats = general_course_compare(eratype, ids; load_course_func = load_snow_course, load_era_func = era5_from_id, groupfunc = mymonth).basindata
 
     ismissing(summary_stats) && return missing
 
