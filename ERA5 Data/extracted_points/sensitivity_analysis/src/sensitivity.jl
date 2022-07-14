@@ -40,9 +40,11 @@ function sensitivity(eratype, erafile, basin, offset, weight_func)
     end
 
     #Now pass each station, along with the above functions, into the basin summary generator
-    summary_stats = general_course_compare(eratype, ids; load_course_func = load_snow_course, load_era_func = era5_from_id, groupfunc = mymonth).basindata
+    summary_stats = general_course_compare(eratype, ids; load_course_func = load_snow_course, load_era_func = era5_from_id, groupfunc = mymonth)
 
     ismissing(summary_stats) && return missing
+
+    summary_stats = summary_stats.basindata
 
     #And grab the Percent of Median diff RMSD for the March 16th-April 15th period, and return it
     return (pom_diff_rmsd = only(summary_stats[summary_stats.datetime .== 4, :pom_diff_rmsd]), nmissing = length(ids)-nrow(nn_df))

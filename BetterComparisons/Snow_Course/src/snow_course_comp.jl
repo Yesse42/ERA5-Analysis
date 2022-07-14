@@ -5,8 +5,6 @@ using CSV, DataFrames, Plots, JLD2, WeakRefStrings
 
 include(joinpath(ERA.COMPAREDIR, "Load Scripts", "load_snow_course.jl"))
 include(joinpath(ERA.COMPAREDIR, "Load Scripts", "load_era.jl"))
-include(joinpath(ERA.COMPAREDIR, "Comparison Scripts", "compare_summary.jl"))
-include(joinpath(ERA.COMPAREDIR, "Comparison Scripts", "basin_agg_funcs.jl"))
 include(joinpath(ERA.COMPAREDIR, "Comparison Scripts", "omniplot.jl"))
 
 include("comparison_machinery.jl")

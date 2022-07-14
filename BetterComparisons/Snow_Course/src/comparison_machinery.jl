@@ -24,6 +24,7 @@ end
 function general_course_compare(eratype, courses; groupfunc=mymonthperiod, 
     median_group_func=mymonth, load_course_func = load_snow_course, load_era_func = load_era)
     course_data = DataFrame[]
+    used_courses = String[]
     for id in courses
         single_course_data = load_course_func(id)
         eradata = load_era_func(eradatadir, eratype, id)
@@ -41,11 +42,14 @@ function general_course_compare(eratype, courses; groupfunc=mymonthperiod,
         newtimecol = Symbol(groupfunc)
         select!(analyzed_data, newtimecol=>:datetime, Not(newtimecol))
         push!(course_data, analyzed_data)
+        push!(used_courses, id)
     end
 
     basinmean = basin_aggregate(course_data; timecol = "datetime")
 
+    if ismissing(basinmean) return missing end
+
     sort!(basinmean, :datetime)
 
-    return if ismissing(basinmean) return missing else return (basindata = basinmean, coursedata = Dictionary(courses, course_data)) end
+    return (basindata = basinmean, coursedata = Dictionary(used_courses, course_data))
 end

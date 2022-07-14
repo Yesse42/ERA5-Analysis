@@ -36,7 +36,7 @@ for basin in ERA.basin_names
             push!(snotel_data, analyzed_data)
         end
 
-        isempty(used_snotels) && continue
+        isempty(snotel_data) && continue
 
         basinmean = sort!(
             basin_aggregate(snotel_data; timecol = "datetime"),
