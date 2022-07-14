@@ -1,6 +1,5 @@
-cd(@__DIR__)
 burrowactivate()
-using CSV, DataFrames, Dates, NCDatasets, NearestNeighbors, Distances, StaticArrays
+using CSV, DataFrames, Dates, NCDatasets, NearestNeighbors, Distances, StaticArrays, Dictionaries
 import ERA5Analysis as ERA
 
 #Some functions to be used later; this one detects a glacier or missing data
@@ -14,12 +13,28 @@ end
 #100m elevation diff is equal to a 5km distance diff
 weight_func(eldiff, dist) = eldiff / 100 + dist / 5000
 
-function era_best_neighbors(eratype, erafile, stations, offset = CartesianIndex(3, 1), weight_func=weight_func)
+gi = getindex
+
+#Pre-load some stuff
+glacier_masks = Dictionary{String, Array{Bool, 2}}()
+elevations_datas = Dictionary{String, Array{Float32, 2}}()
+lonlatgrids = Dictionary{String, Array{SVector{2, Float32}, 2}}()
+for (eratype, erafile) in zip(ERA.eratypes, ERA.erafiles)
     sd_data = Dataset("$(ERA.ERA5DATA)/$eratype/$erafile", "r")
-    elev_data = Dataset("../data/$(eratype)_aligned_elevations.nc", "r")
+    elev_data = Dataset("$(ERA.ERA5DATA)/extracted_points/data/$(eratype)_aligned_elevations.nc", "r")
     elevations = elev_data["elevation_m"][:]
     glacier_mask = isglacier(sd_data["sd"][:])
     lonlatgrid = SVector.(sd_data["longitude"][:], sd_data["latitude"][:]')
+    insert!.([glacier_masks, elevations_datas, lonlatgrids], eratype, [glacier_mask[:,:], elevations, lonlatgrid])
+    close(sd_data)
+    close(elev_data)
+end
+
+function era_best_neighbors(eratype, stations; offset = CartesianIndex(3, 1), weight_func=weight_func)
+    glacier_mask = glacier_masks[eratype]
+    elevations = elevations_datas[eratype]
+    lonlatgrid = lonlatgrids[eratype]
+
     station_locs = SVector.(stations.Longitude, stations.Latitude)
 
     #Now make a balltree
@@ -53,7 +68,7 @@ function era_best_neighbors(eratype, erafile, stations, offset = CartesianIndex(
         #Now get the ordering of the weight data from lowest to highest (NaNs will float to the top))
         order = sortperm(weight_data[:])
         #Only accept the points with the 4 lowest weights
-        for i in order[1:4]
+        for i in order[1:min(4, length(order))]
             if !isnan(eldiffs[i])
                 idx = Tuple(near_idxs[i])
                 push!(

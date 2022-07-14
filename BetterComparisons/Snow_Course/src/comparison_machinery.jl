@@ -1,5 +1,4 @@
 burrowactivate()
-cd(@__DIR__)
 import ERA5Analysis as ERA
 using CSV, DataFrames, Plots, JLD2, WeakRefStrings
 
@@ -44,9 +43,7 @@ function general_course_compare(eratype, courses; groupfunc=mymonthperiod,
         push!(course_data, analyzed_data)
     end
 
-    basinmean = sort!(
-        basin_aggregate(course_data; timecol = "datetime"),
-        "datetime",
-    )
-    return basinmean
+    basinmean = basin_aggregate(course_data; timecol = "datetime")
+
+    return if ismissing(basinmean) return missing else return sort!(basinmean, :datetime) end
 end

@@ -14,7 +14,7 @@ stations =
 stations = vcat(stations...)
 
 #This script will find the nearest ERA5 grid point to each station
-for (eratype, erafile) in zip(ERA.eratypes, ERA.erafiles)
-    outdf = era_best_neighbors(eratype, erafile, stations)
+for eratype in ERA.eratypes
+    outdf = era_best_neighbors(eratype, stations)
     CSV.write("../data/$(eratype)_chosen_points.csv")
 end

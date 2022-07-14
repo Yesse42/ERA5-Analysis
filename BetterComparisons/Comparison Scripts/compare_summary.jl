@@ -1,9 +1,9 @@
 using CSV,
     DataFrames, Dates, Dictionaries, AxisArrays, StatsBase, AxisArrays, JLD2, Missings
 burrowactivate()
-import ERA5Analysis as ERA
+import ERA5Analysis as ERA, Base.Iterators as Itr
 
-StatsBase.rmsd(x) = sqrt(sum(x_i^2 for x_i in x) / length(x))
+myrmsd(x) = sqrt(sum(x_i^2 for x_i in x) / length(x))
 
 monthgroup(time) = round(time, Month(1), RoundDown)
 
@@ -30,7 +30,7 @@ function comparison_summary(
     groupmonth = groupby(withmonth, median_group_name)
 
     mystat(stat) = f(x) =
-        if all(ismissing.(x))
+        if all(Itr.map(ismissing, x))
             return missing
         else
             return stat(filter(!ismissing, x))
@@ -85,7 +85,7 @@ function comparison_summary(
         comparecols .=> mystat(median) .=> comparecols .* "_median",
         statcols .=> mystat(mean) .=> statcols .* "_mean",
         groupcols .=> mystat(mean) .=> groupcols .* "_mean",
-        groupcols .=> mystat(rmsd) .=> groupcols .* "_rmsd",
+        groupcols .=> mystat(myrmsd) .=> groupcols .* "_rmsd",
         comparecols => my2argstat(cor) => "corr",
         collect.(eachrow(statcols)) .=> my2argstat(cor) .=> ["anom","pom"] .* "_corr",
     )
