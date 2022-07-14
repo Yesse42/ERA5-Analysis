@@ -14,6 +14,9 @@ function burrowactivate(projectname = nothing)
     catch e
         error("Project with given name not found")
     end
-    Pkg.activate(".")
-    return cd(currentdir)
+    if Base.active_project() ≠ joinpath(@__DIR__, "Project.toml")
+        Pkg.activate(".")
+    end
+    cd(currentdir)
+    return nothing
 end
