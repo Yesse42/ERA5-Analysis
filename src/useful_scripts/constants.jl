@@ -2,7 +2,7 @@ chena_basin_ids = ["19080306"]
 copper_ids = ["190201"]
 kenai_ids = ["190203"]
 southeast_ids = ["190705"]
-remote_ids = ["19090101"]
+northern_ids = ["19090101", "19090102", "19090104"]
 western_ids = ["190903"]
 norton_coast = ["190501"]
 lynn_canal = ["190103"]
@@ -11,7 +11,7 @@ const allowed_hucs = [
     copper_ids,
     kenai_ids,
     southeast_ids,
-    remote_ids,
+    northern_ids,
     western_ids,
     norton_coast,
     lynn_canal,
@@ -20,9 +20,9 @@ const basin_names = [
     "Chena",
     "Copper",
     "Kenai",
-    "Southeast Interior",
+    "Eastern Interior",
     "Northern Interior",
-    "Western Interior",
+    "Lower Yukon",
     "Norton Sound",
     "Lynn Canal",
 ]
