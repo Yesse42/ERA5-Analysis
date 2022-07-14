@@ -4,6 +4,8 @@ using CSV,
     DataFrames, Dates, NCDatasets, Dictionaries, JLD2, Shapefile, PolygonOps, StaticArrays
 import ERA5Analysis as ERA
 
+include(joinpath(ERA.BASINDATA, "shape_poly_to_sarrs.jl"))
+
 swe_data = CSV.read("../data/ak_gamma.csv", DataFrame)
 
 flines = unique(swe_data.station_id)
@@ -13,21 +15,24 @@ fline_shapefile = DataFrame(Shapefile.Table("../data/flines.shp"))
 transform!(
     fline_shapefile,
     :NAME => ByRow(x -> strip(x, '\0')) => :ID,
-    :geometry => ByRow(x -> ERA.shape_to_sarr(x; close = true)) => :polygon,
+    :geometry => ByRow(geom -> only(shape_poly_to_sarrs(geom))) => :polygon,
 )
 
 basin_shape_paths = "$(ERA.BASINDATA)/HUC_Shapes/WBDHU" .* string.([6, 8]) .* ".shp"
 
 basin_shapes = Dictionary([6, 8], DataFrame.(Shapefile.Table.(basin_shape_paths)))
 
-basin_polys = Dictionary{String, Vector{SVector{2, Float64}}}()
-for (basin_huc, basin) in zip(ERA.allowed_hucs, ERA.basin_names)
-    basin_huc = only(basin_huc)
-    basin_shapefile = basin_shapes[length(basin_huc)]
-    basin_idx = findfirst(==(basin_huc), basin_shapefile[!, "huc$(length(basin_huc))"])
-    #and use that to grab the polygon
-    my_polygon = basin_shapefile[basin_idx, :geometry]
-    insert!(basin_polys, basin, ERA.shape_to_sarr(my_polygon; close = true))
+basin_polys = Dictionary{String, Vector{Vector{SVector{2, Float64}}}}()
+for (basin_hucs, basin) in zip(ERA.allowed_hucs, ERA.basin_names)
+    all_huc_polys = Vector{SVector{2, Float64}}[]
+    for basin_huc in basin_hucs
+        basin_shapefile = basin_shapes[length(basin_huc)]
+        basin_idx = findfirst(==(basin_huc), basin_shapefile[!, "huc$(length(basin_huc))"])
+        #and use that to grab the polygon
+        my_polygon = basin_shapefile[basin_idx, :geometry]
+        append!(all_huc_polys, shape_poly_to_sarrs(my_polygon))
+    end
+    insert!(basin_polys, basin, all_huc_polys)
 end
 
 for eratype in ERA.eratypes
@@ -38,10 +43,10 @@ for eratype in ERA.eratypes
             println(fline)
             continue
         end
-        fline_points = ERA.shape_to_sarr(fline_shapefile[fline_idx, :geometry])
+        fline_points = only(shape_poly_to_sarrs(fline_shapefile[fline_idx, :geometry]))
         for (basin_huc, basin) in zip(ERA.allowed_hucs, ERA.basin_names)
-            basin_poly = basin_polys[basin]
-            if any(inpolygon.(fline_points, Ref(basin_poly)) .== 1)
+            basin_polygons = basin_polys[basin]
+            if any(inpolygon.(fline_points, permutedims(basin_polygons)) .== 1)
                 push!(basin_to_flines[basin], fline)
             end
         end
