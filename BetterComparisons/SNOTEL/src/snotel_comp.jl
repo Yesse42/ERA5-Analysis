@@ -19,7 +19,6 @@ for basin in ERA.basin_names
             jldopen(joinpath(ERA.NRCSDATA, "cleansed", "SNOTEL_basin_to_id.jld2"))["basin_to_id"]
 
         snotels = basin_to_snotel[basin]
-        used_snotels = String[]
         snotel_data = DataFrame[]
         for id in snotels
             single_snotel_data = load_snotel(id)
@@ -33,7 +32,6 @@ for basin in ERA.basin_names
                     :datetime;
                     anom_stat = "median",
                 ).grouped_data
-            push!(used_snotels, id)
             select!(analyzed_data, :monthgroup=>:datetime, Not(:monthgroup))
             push!(snotel_data, analyzed_data)
         end
@@ -41,7 +39,7 @@ for basin in ERA.basin_names
         isempty(used_snotels) && continue
 
         basinmean = sort!(
-            basin_aggregate(snotel_data, used_snotels; timecol = "datetime"),
+            basin_aggregate(snotel_data; timecol = "datetime"),
             "datetime",
         )
         insert!(eratype_dict, eratype, basinmean)

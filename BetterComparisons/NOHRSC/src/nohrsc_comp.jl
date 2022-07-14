@@ -17,7 +17,6 @@ for basin in ERA.basin_names
 
         flines = basin_to_fline[basin]
         isempty(flines) && continue
-        used_flines = String[]
         nohrsc_data = DataFrame[]
         for id in flines
             data = load_nohrsc(id, eratype)
@@ -29,7 +28,6 @@ for basin in ERA.basin_names
                     :datetime;
                     anom_stat = "median"
                 ).grouped_data
-            push!(used_flines, id)
             select!(analyzed_data, :monthgroup=>:datetime, Not(:monthgroup))
             push!(nohrsc_data, analyzed_data)
         end
@@ -37,7 +35,7 @@ for basin in ERA.basin_names
         isempty(nohrsc_data) && continue
 
         basinmean = sort!(
-            basin_aggregate(nohrsc_data, used_flines; timecol = "datetime"),
+            basin_aggregate(nohrsc_data; timecol = "datetime"),
             "datetime",
         )
         insert!(eratype_dict, eratype, basinmean)
