@@ -16,7 +16,7 @@ for (eratype, eradir) in zip(eratypes, era5dirs)
         #Now extract the data for each basin and calculate the daily basin mean
         basin_coord_df = CSV.read("../$eratype/$(basin)_era_points.csv", DataFrame)
         idxs = CartesianIndex.(basin_coord_df.lonidx, basin_coord_df.latidx)
-        averages = [mean(skipmissing(sd[idxs, i])) for i in axes(sd, 3)]
+        averages = [mean(skipmissing(sd[idxs, i])) for i in Base.axes(sd, 3)]
         CSV.write(
             "../$eratype/$(basin)_sd_avgs.csv",
             DataFrame(; datetime = times, sd_avg = averages),
