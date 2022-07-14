@@ -32,8 +32,9 @@ for basin in ERA.basin_names
                     [:era_swe, :snotel_swe],
                     :datetime;
                     anom_stat = "median",
-                ).monthperioddata
+                ).grouped_data
             push!(used_snotels, id)
+            select!(analyzed_data, :monthgroup=>:datetime, Not(:monthgroup))
             push!(snotel_data, analyzed_data)
         end
 

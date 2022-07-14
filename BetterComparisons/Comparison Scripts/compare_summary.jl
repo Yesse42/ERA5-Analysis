@@ -5,24 +5,29 @@ import ERA5Analysis as ERA
 
 StatsBase.rmsd(x) = sqrt(sum(x_i^2 for x_i in x) / length(x))
 
+monthgroup(time) = round(time, Month(1), RoundDown)
+
 function comparison_summary(
     data,
     comparecols,
     timecol;
     normal_times = (1991, 2020),
     anom_stat = "median",
+    groupfunc = monthgroup,
+    median_group_func = month
 )
     comparecols = string.(comparecols)
     timecol = string(timecol)
 
-    withmonth = transform(data, timecol => ByRow(month) => :month)
+    median_group_name = Symbol(median_group_func)
+    withmonth = transform(data, timecol => ByRow(median_group_func) => median_group_name)
     #1991-2020 normals
-    filter!(row -> normal_times[1] <= year(row.datetime) <= normal_times[2], withmonth)
+    filter!(row -> normal_times[1] <= year(getproperty(row, Symbol(timecol))) <= normal_times[2], withmonth)
     #Skip this station if it's empty
     if isempty(withmonth)
-        return StationIsEmpty
+        return missing
     end
-    groupmonth = groupby(withmonth, :month)
+    groupmonth = groupby(withmonth, median_group_name)
 
     mystat(stat) = f(x) =
         if all(ismissing.(x))
@@ -38,7 +43,7 @@ function comparison_summary(
     )
     #Make a convenience function to get means and medians by month
     function getmonthstat(time, datasource, stat = anom_stat)
-        idx = findfirst(==(month(time)), monthstats.month)
+        idx = findfirst(==(month(time)), monthstats[!, median_group_name])
         if isnothing(idx)
             return missing
         end
@@ -53,7 +58,7 @@ function comparison_summary(
         (comparecols_time .=> ByRow.(anomfuncs) .=> comparecols .* "_anom")...,
         (comparecols_time .=> ByRow.(pomfuncs) .=> comparecols .* "_pom")...,
     )
-    statcols = vec(comparecols .* permutedims(["_anom", "_pom"]))
+    statcols = comparecols .* permutedims(["_anom", "_pom"])
     transform!(
         diffdata,
         comparecols => ByRow(-) => :raw_diff,
@@ -70,38 +75,23 @@ function comparison_summary(
         end
     end
 
-    diffdata_withmonth = transform(diffdata, timecol => ByRow(month) => :month)
-    group_diff = groupby(diffdata_withmonth, :month)
+    groupcolname = Symbol(groupfunc)
+    diffdata_withmonth = transform(diffdata, timecol => ByRow(groupfunc) => groupcolname)
+    group_diff = groupby(diffdata_withmonth, groupcolname)
     groupcols = String.([:raw_diff, :anomaly_diff, :pom_diff])
     month_diff_stats = combine(
         group_diff,
+        comparecols .=> mystat(mean) .=> comparecols .* "_mean",
+        comparecols .=> mystat(median) .=> comparecols .* "_median",
+        statcols .=> mystat(mean) .=> statcols .* "_mean",
         groupcols .=> mystat(mean) .=> groupcols .* "_mean",
         groupcols .=> mystat(rmsd) .=> groupcols .* "_rmsd",
         comparecols => my2argstat(cor) => "corr",
-        comparecols .* "_anom" => my2argstat(cor) => "anom_corr",
-        comparecols .* "_pom" => my2argstat(cor) => "pom_corr",
-    )
-
-    diff_month_stats = outerjoin(monthstats, month_diff_stats; on = :month)
-
-    #Now also calculate means for each monthlong period
-    diffdata_month_period = transform(
-        diffdata,
-        timecol => ByRow(x -> Dates.round(x, Month(1), RoundDown)) => timecol,
-    )
-    group_month_period = groupby(diffdata_month_period, timecol)
-    monthperiodstats = combine(
-        group_month_period,
-        groupcols .=> mean .=> groupcols .* "_mean",
-        groupcols .=> rmsd .=> groupcols .* "_rmsd",
-        comparecols .=> mean .=> comparecols .* "_mean",
-        comparecols .=> median .=> comparecols .* "_median",
-        statcols .=> mean .=> statcols .* "_mean",
+        collect.(eachrow(statcols)) .=> my2argstat(cor) .=> ["anom","pom"] .* "_corr",
     )
 
     return (
-        dailydata = diffdata,
-        monthperioddata = monthperiodstats,
-        monthmeandata = diff_month_stats,
+        ungrouped_data = diffdata,
+        grouped_data = month_diff_stats,
     )
 end

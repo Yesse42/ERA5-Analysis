@@ -27,9 +27,10 @@ for basin in ERA.basin_names
                     data,
                     [:mean_era_swe, :gamma],
                     :datetime;
-                    anom_stat = "median",
-                ).monthperioddata
+                    anom_stat = "median"
+                ).grouped_data
             push!(used_flines, id)
+            select!(analyzed_data, :monthgroup=>:datetime, Not(:monthgroup))
             push!(nohrsc_data, analyzed_data)
         end
 
@@ -47,7 +48,7 @@ for basin in ERA.basin_names
     #Now plot the difference in percent of median and the anomaly difference on separate axes,
     #for both era5 land and base
     data = getindex.(Ref(eratype_dict), ERA.eratypes)
-    #Filter for april
+    #Filter for end of march/beginning of april
     data = [filter(x -> month(x.datetime) == 4, d) for d in data]
     #Now get the percent of median and anomaly diff
     omniplot(;

@@ -5,7 +5,7 @@ using CSV, DataFrames, Dates
 import ERA5Analysis as ERA
 
 snotelpath = datadir("raw", "AK_SNOTEL_14-06-2022.csv")
-snowcoursepath = datadir("raw", "AK_SNOW_COURSE_14-06-2022.csv")
+snowcoursepath = datadir("raw", "AK_SNOW_COURSE.csv")
 metapath = datadir("raw", "Map metadata export.csv")
 
 outdir = datadir("cleansed")
@@ -38,7 +38,20 @@ course_ids = [match(course_regex, name).captures[1] for name in course_names]
 #Now finally rename the columns of the raw data with these ids
 rename!(snotel, vcat("Date", (["SWE", "Depth"] .* "_" .* permutedims(snotel_ids))[:]))
 rename!(snow_course, vcat("Date", (["SWE", "Depth"] .* "_" .* permutedims(course_ids))[:]))
-snow_course.Date = parse.(DateTime, snow_course.Date, dateformat"u YYYY")
+snow_course.Date = begin
+    #Parse the horrendous format
+    month_to_num = Dates.LOCALES["english"].month_abbr_value
+    "Jun 2nd Half 1981"
+    function horrid_date_to_nice_date(str)
+        monthnum = month_to_num[str[1:3]]
+        year = parse(Int, str[14:17])
+        half_ind = parse(Int, str[5])
+        dayofmonth = 1 + (daysinmonth(year, monthnum))÷2 * (half_ind-1)
+        return Date(year, monthnum, dayofmonth)
+    end
+    horrid_date_to_nice_date.(snow_course.Date)
+end
+display(snow_course)
 for df in [snotel, snow_course]
     select!(df, :Date => :datetime, r"SWE")
     #Remove any columns that are entirely missing
