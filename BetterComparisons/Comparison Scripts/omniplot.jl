@@ -34,5 +34,5 @@ function omniplot(; basedat, landdat, basin, figtitle, stat_swe_name, era_swe_na
         yaxis = nothing,
     )
     bp = plot(p1, p2, legendp; layout = l, plot_title = figtitle)
-    return savefig(bp, "../vis/$(basin)_course_comp.png")
+    return savefig(bp, "../vis/$(basin)_comp.png")
 end
