@@ -46,7 +46,7 @@ snow_course.Date = begin
         monthnum = month_to_num[str[1:3]]
         year = parse(Int, str[14:17])
         half_ind = parse(Int, str[5])
-        dayofmonth = 1 + (daysinmonth(year, monthnum))÷2 * (half_ind-1)
+        dayofmonth = 1 + (daysinmonth(year, monthnum)) ÷ 2 * (half_ind - 1)
         return Date(year, monthnum, dayofmonth)
     end
     horrid_date_to_nice_date.(snow_course.Date)

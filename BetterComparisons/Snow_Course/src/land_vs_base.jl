@@ -9,7 +9,8 @@ include(joinpath(ERA.COMPAREDIR, "Comparison Scripts", "omniplot.jl"))
 
 include("comparison_machinery.jl")
 
-land_pom_rmsd = []; base_pom_rmsd = []
+land_pom_rmsd = [];
+base_pom_rmsd = [];
 for basin in ERA.basin_names
     eradata = DataFrame[]
 
@@ -18,7 +19,7 @@ for basin in ERA.basin_names
             jldopen(joinpath(ERA.NRCSDATA, "cleansed", "Snow_Course_basin_to_id.jld2"))["basin_to_id"]
 
         courses = basin_to_courses[basin]
-        basinmean = general_course_compare(eratype, courses;groupfunc=mymonth)
+        basinmean = general_course_compare(eratype, courses; groupfunc = mymonth)
         push!(eradata, basinmean.basindata)
     end
 
@@ -30,6 +31,13 @@ for basin in ERA.basin_names
     push!(land_pom_rmsd, only(eradata[2].pom_diff_rmsd))
     push!(base_pom_rmsd, only(eradata[1].pom_diff_rmsd))
 end
-    #Now get the percent of median and anomaly diff
+#Now get the percent of median and anomaly diff
 
-display(DataFrame(;basin=ERA.basin_names, land_minus_base_pom_rmsd = land_pom_rmsd.-base_pom_rmsd, land_pom_rmsd, base_pom_rmsd))
+display(
+    DataFrame(;
+        basin = ERA.basin_names,
+        land_minus_base_pom_rmsd = land_pom_rmsd .- base_pom_rmsd,
+        land_pom_rmsd,
+        base_pom_rmsd,
+    ),
+)

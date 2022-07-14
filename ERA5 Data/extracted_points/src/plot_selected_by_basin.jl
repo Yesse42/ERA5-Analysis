@@ -134,7 +134,7 @@ for (eratype, erafile) in zip(ERA.eratypes, ERA.erafiles)
                     transform = ccrs.PlateCarree(),
                     color = mycolor,
                     s = 30,
-                    alpha = 0.7
+                    alpha = 0.7,
                 )
                 arrow_offset =
                     (lon[era_id_data.lonidx], lat[era_id_data.latidx]) .- stat_point
@@ -143,7 +143,7 @@ for (eratype, erafile) in zip(ERA.eratypes, ERA.erafiles)
                     transform = ccrs.PlateCarree(),
                     color = "orange",
                     s = 20,
-                    alpha=0.7
+                    alpha = 0.7,
                 )
                 #Draw arrow to ERA point
                 ax.arrow(
@@ -151,7 +151,7 @@ for (eratype, erafile) in zip(ERA.eratypes, ERA.erafiles)
                     arrow_offset...;
                     transform = ccrs.PlateCarree(),
                     linewidth = 1,
-                    alpha=0.7
+                    alpha = 0.7,
                 )
             end
         end

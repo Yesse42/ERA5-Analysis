@@ -1,5 +1,6 @@
 burrowactivate()
-using CSV, DataFrames, Dates, NCDatasets, NearestNeighbors, Distances, StaticArrays, Dictionaries
+using CSV,
+    DataFrames, Dates, NCDatasets, NearestNeighbors, Distances, StaticArrays, Dictionaries
 import ERA5Analysis as ERA
 
 #Some functions to be used later; this one detects a glacier or missing data
@@ -21,16 +22,28 @@ elevations_datas = Dictionary{String, Array{Float32, 2}}()
 lonlatgrids = Dictionary{String, Array{SVector{2, Float32}, 2}}()
 for (eratype, erafile) in zip(ERA.eratypes, ERA.erafiles)
     sd_data = Dataset("$(ERA.ERA5DATA)/$eratype/$erafile", "r")
-    elev_data = Dataset("$(ERA.ERA5DATA)/extracted_points/data/$(eratype)_aligned_elevations.nc", "r")
+    elev_data = Dataset(
+        "$(ERA.ERA5DATA)/extracted_points/data/$(eratype)_aligned_elevations.nc",
+        "r",
+    )
     elevations = elev_data["elevation_m"][:]
     glacier_mask = isglacier(sd_data["sd"][:])
     lonlatgrid = SVector.(sd_data["longitude"][:], sd_data["latitude"][:]')
-    insert!.([glacier_masks, elevations_datas, lonlatgrids], eratype, [glacier_mask[:,:], elevations, lonlatgrid])
+    insert!.(
+        [glacier_masks, elevations_datas, lonlatgrids],
+        eratype,
+        [glacier_mask[:, :], elevations, lonlatgrid],
+    )
     close(sd_data)
     close(elev_data)
 end
 
-function era_best_neighbors(eratype, stations; offset = CartesianIndex(3, 1), weight_func=weight_func)
+function era_best_neighbors(
+    eratype,
+    stations;
+    offset = CartesianIndex(3, 1),
+    weight_func = weight_func,
+)
     glacier_mask = glacier_masks[eratype]
     elevations = elevations_datas[eratype]
     lonlatgrid = lonlatgrids[eratype]
@@ -62,7 +75,8 @@ function era_best_neighbors(eratype, stations; offset = CartesianIndex(3, 1), we
         #Now calculate the weights
         eldiffs = abs.(statdata.Elevation_m .- elev_data)
         near_lonlat = lonlatgrid[near_idxs]
-        dists = Haversine{Float64}().(Ref((statdata.Longitude, statdata.Latitude)), near_lonlat)
+        dists =
+            Haversine{Float64}().(Ref((statdata.Longitude, statdata.Latitude)), near_lonlat)
         weight_data = weight_func.(eldiffs, dists)
 
         #Now get the ordering of the weight data from lowest to highest (NaNs will float to the top))

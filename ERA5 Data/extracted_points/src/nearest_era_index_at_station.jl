@@ -13,20 +13,34 @@ stations =
     CSV.read.("$(ERA.NRCSDATA)/cleansed/" .* ERA.networktypes .* "_Metadata.csv", DataFrame)
 stations = vcat(stations...)
 
-basin_to_snotels, basin_to_snow_courses = getindex.(jldopen.(joinpath.(ERA.NRCSDATA, "cleansed", ERA.networktypes.*"_basin_to_id.jld2")), "basin_to_id")
+basin_to_snotels, basin_to_snow_courses =
+    getindex.(
+        jldopen.(
+            joinpath.(ERA.NRCSDATA, "cleansed", ERA.networktypes .* "_basin_to_id.jld2")
+        ),
+        "basin_to_id",
+    )
 
 #Load in the dict of the optimal search parameters for each basin
-best_params_dict = jldopen(joinpath(ERA.ERA5DATA, "extracted_points", "sensitivity_analysis", "data", "best_weight_offset_dict.jld2"))["best_weight_offset_dict"]
+best_params_dict = jldopen(
+    joinpath(
+        ERA.ERA5DATA,
+        "extracted_points",
+        "sensitivity_analysis",
+        "data",
+        "best_weight_offset_dict.jld2",
+    ),
+)["best_weight_offset_dict"]
 
 #This script will find the nearest ERA5 grid point to each station
 for eratype in ERA.eratypes
     outdfs = DataFrame[]
     for basin in ERA.basin_names
         ids = vcat(basin_to_snotels[basin], basin_to_snow_courses[basin])
-        basin_stations = filter(x->string.(x.ID) in ids, stations)
+        basin_stations = filter(x -> string.(x.ID) in ids, stations)
         search_params = best_params_dict[(basin, eratype)]
         offset = search_params.offset
-        weight_func(eldiff, dist) = eldiff + dist/(search_params.weight)
+        weight_func(eldiff, dist) = eldiff + dist / (search_params.weight)
         push!(outdfs, era_best_neighbors(eratype, basin_stations; offset, weight_func))
     end
     outdf = reduce(vcat, outdfs)

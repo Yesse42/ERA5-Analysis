@@ -32,16 +32,13 @@ for basin in ERA.basin_names
                     :datetime;
                     anom_stat = "median",
                 ).grouped_data
-            select!(analyzed_data, :monthgroup=>:datetime, Not(:monthgroup))
+            select!(analyzed_data, :monthgroup => :datetime, Not(:monthgroup))
             push!(snotel_data, analyzed_data)
         end
 
         isempty(snotel_data) && continue
 
-        basinmean = sort!(
-            basin_aggregate(snotel_data; timecol = "datetime"),
-            "datetime",
-        )
+        basinmean = sort!(basin_aggregate(snotel_data; timecol = "datetime"), "datetime")
         insert!(eratype_dict, eratype, basinmean)
     end
     isempty(eratype_dict) && continue

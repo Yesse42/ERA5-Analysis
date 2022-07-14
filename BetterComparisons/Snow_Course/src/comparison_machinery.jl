@@ -13,16 +13,22 @@ eradatadir = joinpath(ERA.ERA5DATA, "extracted_points")
 "This function groups the two halves of the month the snow course measurements can occur in (e.g. end of march and start of april are grouped)"
 function mymonth(date)
     #+18 days ensures that the 15th, 16th, and 17th get shifted into the next month
-    date = date+Day(18)
+    date = date + Day(18)
     return month(date)
 end
 function mymonthperiod(date)
-    shiftdate = date+Day(18)
+    shiftdate = date + Day(18)
     return round(date, Month(1), RoundDown)
 end
 
-function general_course_compare(eratype, courses; groupfunc=mymonthperiod, 
-    median_group_func=mymonth, load_course_func = load_snow_course, load_era_func = load_era)
+function general_course_compare(
+    eratype,
+    courses;
+    groupfunc = mymonthperiod,
+    median_group_func = mymonth,
+    load_course_func = load_snow_course,
+    load_era_func = load_era,
+)
     course_data = DataFrame[]
     used_courses = String[]
     for id in courses
@@ -37,17 +43,19 @@ function general_course_compare(eratype, courses; groupfunc=mymonthperiod,
                 :datetime;
                 anom_stat = "median",
                 groupfunc,
-                median_group_func
+                median_group_func,
             ).grouped_data
         newtimecol = Symbol(groupfunc)
-        select!(analyzed_data, newtimecol=>:datetime, Not(newtimecol))
+        select!(analyzed_data, newtimecol => :datetime, Not(newtimecol))
         push!(course_data, analyzed_data)
         push!(used_courses, id)
     end
 
     basinmean = basin_aggregate(course_data; timecol = "datetime")
 
-    if ismissing(basinmean) return missing end
+    if ismissing(basinmean)
+        return missing
+    end
 
     sort!(basinmean, :datetime)
 

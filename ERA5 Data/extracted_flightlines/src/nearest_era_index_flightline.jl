@@ -1,6 +1,15 @@
 cd(@__DIR__)
 burrowactivate()
-using CSV, DataFrames, Dates, NCDatasets, Dictionaries, JLD2, Shapefile, NearestNeighbors, Distances, StaticArrays
+using CSV,
+    DataFrames,
+    Dates,
+    NCDatasets,
+    Dictionaries,
+    JLD2,
+    Shapefile,
+    NearestNeighbors,
+    Distances,
+    StaticArrays
 import ERA5Analysis as ERA
 
 #Some functions to be used later; this one detects a glacier or missing data

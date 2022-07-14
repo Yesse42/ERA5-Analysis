@@ -14,7 +14,7 @@ function comparison_summary(
     normal_times = (1991, 2020),
     anom_stat = "median",
     groupfunc = monthgroup,
-    median_group_func = month
+    median_group_func = month,
 )
     comparecols = string.(comparecols)
     timecol = string(timecol)
@@ -22,7 +22,11 @@ function comparison_summary(
     median_group_name = Symbol(median_group_func)
     withmonth = transform(data, timecol => ByRow(median_group_func) => median_group_name)
     #1991-2020 normals
-    filter!(row -> normal_times[1] <= year(getproperty(row, Symbol(timecol))) <= normal_times[2], withmonth)
+    filter!(
+        row ->
+            normal_times[1] <= year(getproperty(row, Symbol(timecol))) <= normal_times[2],
+        withmonth,
+    )
     #Skip this station if it's empty
     if isempty(withmonth)
         return missing
@@ -87,11 +91,8 @@ function comparison_summary(
         groupcols .=> mystat(mean) .=> groupcols .* "_mean",
         groupcols .=> mystat(myrmsd) .=> groupcols .* "_rmsd",
         comparecols => my2argstat(cor) => "corr",
-        collect.(eachrow(statcols)) .=> my2argstat(cor) .=> ["anom","pom"] .* "_corr",
+        collect.(eachrow(statcols)) .=> my2argstat(cor) .=> ["anom", "pom"] .* "_corr",
     )
 
-    return (
-        ungrouped_data = diffdata,
-        grouped_data = month_diff_stats,
-    )
+    return (ungrouped_data = diffdata, grouped_data = month_diff_stats)
 end
