@@ -1,8 +1,7 @@
 cd(@__DIR__)
 burrowactivate()
-using CSV, DataFrames, Dates, NCDatasets, Dictionaries, JLD2, Shapefile
+using CSV, DataFrames, Dates, NCDatasets, Dictionaries, JLD2, Shapefile, NearestNeighbors, Distances, StaticArrays
 import ERA5Analysis as ERA
-include("../../nearest_geodetic_neighbor.jl")
 
 #Some functions to be used later; this one detects a glacier or missing data
 function isglacier(era_sd; glacier_thresh = 0.95)
@@ -29,17 +28,21 @@ for (eratype, erafile) in zip(ERA.eratypes, ERA.erafiles)
     sd_data = Dataset("$(ERA.ERA5DATA)/$eratype/$erafile", "r")
     sd = sd_data["sd"][:]
     glacier_mask = isglacier(sd_data["sd"][:])
-    lonlatgrid = tuple.(sd_data["longitude"][:], sd_data["latitude"][:]')
+    lonlatgrid = SVector.(sd_data["longitude"][:], sd_data["latitude"][:]')
+    lonlatidxs = CartesianIndices(lonlatgrid)
+
+    nntree = BallTree(vec(lonlatgrid), Haversine{Float32}())
 
     #Now iterate through each flightline
     fline_to_nearest_neighbor = Dictionary{String, Vector{Tuple{Int, Int}}}()
     for flightline in eachrow(flightlines)
         points = flightline.path.points
-        flightline_points = tuple.(getproperty.(points, :x), getproperty.(points, :y))
-        close_points = Tuple{Int, Int}[]
+        flightline_points = SVector.(getproperty.(points, :x), getproperty.(points, :y))
+        close_points = NTuple{2, Int}[]
         #Find the closest ERA5 grid point for each point of the flightline, and ensure that it is not glacier
         for point in flightline_points
-            closest_idx = brute_nearest_neighbor_idx(point, lonlatgrid)
+            closest_idx, _ = nn(nntree, point)
+            closest_idx = lonlatidxs[closest_idx]
             !glacier_mask[closest_idx] && push!(close_points, Tuple(closest_idx))
         end
         #If there are no available points go on your merry way
