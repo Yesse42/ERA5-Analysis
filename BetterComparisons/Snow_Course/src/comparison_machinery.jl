@@ -22,11 +22,12 @@ function mymonthperiod(date)
     return round(date, Month(1), RoundDown)
 end
 
-function general_course_compare(eratype, courses; groupfunc=mymonthperiod, median_group_func=mymonth)
+function general_course_compare(eratype, courses; groupfunc=mymonthperiod, 
+    median_group_func=mymonth, load_course_func = load_snow_course, load_era_func = load_era)
     course_data = DataFrame[]
     for id in courses
-        single_course_data = load_snow_course(id)
-        eradata = load_era(eradatadir, eratype, id)
+        single_course_data = load_course_func(id)
+        eradata = load_era_func(eradatadir, eratype, id)
         (ismissing(eradata) || ismissing(single_course_data)) && continue
         data = innerjoin(single_course_data, eradata; on = :datetime)
         analyzed_data =

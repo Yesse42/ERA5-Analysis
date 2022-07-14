@@ -3,7 +3,7 @@ burrowactivate()
 import ERA5Analysis as ERA
 
 """This wondrous function expects a list of stations, and a dict of sttaions to data, which
-it will then use to aggregate the data. Expects a vector of the dataframe for each station"""
+it will then use to aggregate the data. Expects a vector of dataframes for each station"""
 function basin_aggregate(datavec; timecol = :datetime, aggfunc = mean)
     not_time_vars = filter(x -> x ≠ string(timecol), names(datavec[1]))
     #Get the times into a common format
