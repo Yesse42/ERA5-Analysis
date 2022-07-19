@@ -155,7 +155,7 @@ for (eratype, erafile) in zip(ERA.eratypes, ERA.erafiles)
                 )
             end
         end
-        plt.savefig("../vis/basin_vis/$eratype/$(basin).png")
+        plt.savefig("../vis/basin_vis/$eratype/$(basin).png", dpi=1200)
         plt.close()
     end
 end
