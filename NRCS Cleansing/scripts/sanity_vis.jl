@@ -13,6 +13,7 @@ for network in ERA.networktypes
         station = string(row.ID)
         swename = "SWE_$station"
         stationdata = data[:, ["datetime", swename]]
+        dropmissing!(stationdata)
 
         #Now groupby month
         transform!(

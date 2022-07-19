@@ -1,58 +1,41 @@
 burrowactivate()
-import ERA5Analysis as ERA
-using CSV, DataFrames, Plots, JLD2
 cd(@__DIR__)
+import ERA5Analysis as ERA
+using CSV, DataFrames, Plots, JLD2, WeakRefStrings
 
 include(joinpath(ERA.COMPAREDIR, "Load Scripts", "load_snotel.jl"))
 include(joinpath(ERA.COMPAREDIR, "Load Scripts", "load_era.jl"))
-include(joinpath(ERA.COMPAREDIR, "Comparison Scripts", "compare_summary.jl"))
-include(joinpath(ERA.COMPAREDIR, "Comparison Scripts", "basin_agg_funcs.jl"))
 include(joinpath(ERA.COMPAREDIR, "Comparison Scripts", "omniplot.jl"))
-
-eradatadir = joinpath(ERA.ERA5DATA, "extracted_points")
+include(joinpath(ERA.COMPAREDIR, "Comparison Scripts", "comparison_machinery.jl"))
 
 for basin in ERA.basin_names
-    eratype_dict = Dictionary()
+    eradata = DataFrame[]
 
     for eratype in ERA.eratypes
-        basin_to_snotel =
+        basin_to_snotels =
             jldopen(joinpath(ERA.NRCSDATA, "cleansed", "SNOTEL_basin_to_id.jld2"))["basin_to_id"]
 
-        snotels = basin_to_snotel[basin]
-        snotel_data = DataFrame[]
-        for id in snotels
-            single_snotel_data = load_snotel(id)
-            eradata = load_era(eradatadir, eratype, id)
-            (ismissing(eradata) || ismissing(single_snotel_data)) && continue
-            data = innerjoin(single_snotel_data, eradata; on = :datetime)
-            analyzed_data =
-                comparison_summary(
-                    data,
-                    [:era_swe, :snotel_swe],
-                    :datetime;
-                    anom_stat = "median",
-                ).grouped_data
-            select!(analyzed_data, :monthgroup => :datetime, Not(:monthgroup))
-            push!(snotel_data, analyzed_data)
-        end
-
-        isempty(snotel_data) && continue
-
-        basinmean = sort!(basin_aggregate(snotel_data; timecol = "datetime"), "datetime")
-        insert!(eratype_dict, eratype, basinmean)
+        snotels = basin_to_snotels[basin]
+        basinmean = general_station_compare(eratype, snotels, load_data_func = load_snotel,
+                    comparecolnames = [:era_swe, :snotel_swe], timecol="datetime")
+                    ismissing(basinmean) && continue
+        push!(eradata, basinmean.basindata)
     end
-    isempty(eratype_dict) && continue
 
-    data = getindex.(Ref(eratype_dict), ERA.eratypes)
-    #Filter for March
-    data = [filter(x -> month(x.datetime) == 3, d) for d in data]
+    isempty(eradata) && continue
+
+    #Now plot the difference in percent of median and the anomaly difference on separate axes,
+    #for both era5 land and base
+    #Filter for march
+    eradata = [filter(x -> month(x.datetime) == 3, d) for d in eradata]
     #Now get the percent of median and anomaly diff
     omniplot(;
-        basedat = data[1],
-        landdat = data[2],
+        basedat = eradata[1],
+        landdat = eradata[2],
         basin,
-        figtitle = "ERA5 vs SNOTEL ($basin) (March only)",
-        stat_swe_name = "snotel_swe_pom_mean",
-        era_swe_name = "era_swe_pom_mean",
+        figtitle = "ERA5 vs SNOTEL ($basin) March)",
+        stat_swe_name = "snotel_swe_fom_mean",
+        era_swe_name = "era_swe_fom_mean",
+        fom_climo_diff_name = "snotel_swe_fom_climo_diff_mean"
     )
 end

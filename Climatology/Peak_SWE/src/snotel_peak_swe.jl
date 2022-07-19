@@ -17,6 +17,7 @@ for snotel in ERA.special_snotels
     name = id_to_data[snotel].Name
     display((name, snotel))
     eradat = load_era.(eradir, ERA.eratypes, snotel)
+    rename!.(eradat, [["datetime", eratype] for eratype in ERA.eratypes])
     snodat = load_snotel(snotel)
     combodat = outerjoin(snodat, eradat...; on = :datetime)
     #Now group by year and calculate the snow off dates

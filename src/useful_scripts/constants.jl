@@ -5,7 +5,7 @@ southeast_ids = ["190705"]
 northern_ids = ["19090101", "19090102", "19090104"]
 western_ids = ["190903"]
 norton_coast = ["190501"]
-lynn_canal = ["190103"]
+lynn_canal = ["190103", "19010206"]
 const allowed_hucs = [
     chena_basin_ids,
     copper_ids,

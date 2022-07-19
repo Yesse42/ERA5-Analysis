@@ -4,7 +4,7 @@ using CSV,
     DataFrames, Dates, NCDatasets, Plots, StaticArrays, Dictionaries, ColorSchemes, JLD2
 import ERA5Analysis as ERA
 
-include(joinpath(ERA.COMPAREDIR, "Snow_Course", "src", "comparison_machinery.jl"))
+include(joinpath(ERA.COMPAREDIR, "Comparison Scripts", "comparison_machinery.jl"))
 include(joinpath(ERA.COMPAREDIR, "Load Scripts", "load_snow_course.jl"))
 include(joinpath(ERA.ERA5DATA, "extracted_points", "src", "nearest_era_index_machinery.jl"))
 
@@ -45,12 +45,14 @@ function sensitivity(eratype, erafile, basin, offset, weight_func)
     end
 
     #Now pass each station, along with the above functions, into the basin summary generator
-    summary_stats = general_course_compare(
+    summary_stats = general_station_compare(
         eratype,
         ids;
-        load_course_func = load_snow_course,
+        load_data_func = load_snow_course,
         load_era_func = era5_from_id,
-        groupfunc = mymonth,
+        comparecolnames = [:era_swe, :snow_course_swe],
+        groupfunc = shifted_month,
+        median_group_func = shifted_month,
     )
 
     ismissing(summary_stats) && return missing
@@ -59,7 +61,7 @@ function sensitivity(eratype, erafile, basin, offset, weight_func)
 
     #And grab the Percent of Median diff RMSD for the March 16th-April 15th period, and return it
     return (
-        pom_diff_rmsd = only(summary_stats[summary_stats.datetime .== 4, :pom_diff_rmsd]),
+        pom_diff_rmsd = only(summary_stats[summary_stats.datetime .== 4, :fom_diff_rmsd]),
         nmissing = length(ids) - nrow(nn_df),
     )
 end
@@ -110,13 +112,12 @@ for basin in ERA.basin_names
             c = myc,
             ylabel = "Offset",
             xlabel = "1m of elevation equivalent to this many meters of distance",
-            aspect_ratio = :equal,
         )
         p1 = heatmap(
             pretty_weights,
             pretty_offsets,
             rmsd_arr;
-            title = "% of Median Diff RMSD",
+            title = "Fraction of Median Diff RMSD",
             shared_kwargs...,
         )
         p2 = heatmap(

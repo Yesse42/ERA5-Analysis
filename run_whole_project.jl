@@ -54,7 +54,7 @@ include.(
         ("land_vs_base.jl", "snow_course_comp.jl"),
     )
 )
-include.(joinpath.(ERA.COMPAREDIR, "SNOTEL", "src", ("snotel_comp.jl",)))
+include.(joinpath.(ERA.COMPAREDIR, "SNOTEL", "src", ("snotel_comp.jl","snotel_land_vs_base.jl")))
 include.(
     joinpath.(
         ERA.COMPAREDIR,
