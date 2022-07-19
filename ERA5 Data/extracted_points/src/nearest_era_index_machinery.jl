@@ -66,7 +66,11 @@ function era_best_neighbors(
         era_point_el = Float16[],
     )
     for (statdata, I) in zip(eachrow(stations), nearest_neighbors)
-        near_idxs = max(I - offset, CartesianIndex(1,1)):min(I + offset, CartesianIndex(size(elevations)))
+        near_idxs =
+            max(I - offset, CartesianIndex(1, 1)):min(
+                I + offset,
+                CartesianIndex(size(elevations)),
+            )
 
         elev_data = elevations[near_idxs]
 

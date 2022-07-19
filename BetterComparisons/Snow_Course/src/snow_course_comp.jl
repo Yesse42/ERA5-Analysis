@@ -16,9 +16,15 @@ for basin in ERA.basin_names
             jldopen(joinpath(ERA.NRCSDATA, "cleansed", "Snow_Course_basin_to_id.jld2"))["basin_to_id"]
 
         courses = basin_to_courses[basin]
-        basinmean = general_station_compare(eratype, courses, load_data_func = load_snow_course,
-                    comparecolnames = [:era_swe, :snow_course_swe], timecol="datetime", 
-                    groupfunc = shifted_monthperiod, median_group_func = shifted_month)
+        basinmean = general_station_compare(
+            eratype,
+            courses;
+            load_data_func = load_snow_course,
+            comparecolnames = [:era_swe, :snow_course_swe],
+            timecol = "datetime",
+            groupfunc = shifted_monthperiod,
+            median_group_func = shifted_month,
+        )
         push!(eradata, basinmean.basindata)
     end
 
@@ -34,6 +40,6 @@ for basin in ERA.basin_names
         figtitle = "ERA5 vs Snow Course ($basin) (Mar 16th - Apr 15th)",
         stat_swe_name = "snow_course_swe_fom_mean",
         era_swe_name = "era_swe_fom_mean",
-        fom_climo_diff_name = "snow_course_swe_fom_climo_diff_mean"
+        fom_climo_diff_name = "snow_course_swe_fom_climo_diff_mean",
     )
 end

@@ -8,7 +8,6 @@ include(joinpath(ERA.COMPAREDIR, "Load Scripts", "load_era.jl"))
 include(joinpath(ERA.COMPAREDIR, "Comparison Scripts", "omniplot.jl"))
 include(joinpath(ERA.COMPAREDIR, "Comparison Scripts", "comparison_machinery.jl"))
 
-
 land_pom_rmsd = []
 base_pom_rmsd = []
 climo_pom_rmsd = []
@@ -20,10 +19,16 @@ for basin in ERA.basin_names
             jldopen(joinpath(ERA.NRCSDATA, "cleansed", "Snow_Course_basin_to_id.jld2"))["basin_to_id"]
 
         courses = basin_to_courses[basin]
-        basinmean = general_station_compare(eratype, courses; load_data_func = load_snow_course,
-        comparecolnames = [:era_swe, :snow_course_swe], timecol = "datetime",
-        groupfunc = shifted_month, median_group_func = shifted_month,
-        n_obs_weighting = true)
+        basinmean = general_station_compare(
+            eratype,
+            courses;
+            load_data_func = load_snow_course,
+            comparecolnames = [:era_swe, :snow_course_swe],
+            timecol = "datetime",
+            groupfunc = shifted_month,
+            median_group_func = shifted_month,
+            n_obs_weighting = true,
+        )
         push!(eradata, basinmean.basindata)
     end
 
@@ -46,7 +51,26 @@ fillcolors = reduce(hcat, (cvec for i in Base.axes(omnidata, 2)))
 xticks = xvals[2:3:end]
 xticklabels = ERA.basin_names
 
-p = bar(vec(xvals), vec(omnidata), fillcolor = vec(fillcolors), legend = :topleft, label = "", xticks = (xticks, xticklabels), rotation=45)
-plot!(p, title="Snow Course April 1st FOM Difference RMSD", ylabel = "Fraction of Median RMSD (unitless)", xlabel="Basin")
-bar(p, (1:3)', [NaN, NaN, NaN]', show_axis=false, label = ["ERA5 Land" "Station Climatology" "ERA5 Base"], fillcolor = permutedims(cvec))
-
+p = bar(
+    vec(xvals),
+    vec(omnidata);
+    fillcolor = vec(fillcolors),
+    legend = :topleft,
+    label = "",
+    xticks = (xticks, xticklabels),
+    rotation = 45,
+)
+plot!(
+    p;
+    title = "Snow Course April 1st FOM Difference RMSD",
+    ylabel = "Fraction of Median RMSD (unitless)",
+    xlabel = "Basin",
+)
+bar(
+    p,
+    (1:3)',
+    [NaN, NaN, NaN]';
+    show_axis = false,
+    label = ["ERA5 Land" "Station Climatology" "ERA5 Base"],
+    fillcolor = permutedims(cvec),
+)

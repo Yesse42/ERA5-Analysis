@@ -22,7 +22,7 @@ function shifted_monthperiod(date)
 end
 
 function monthperiod(date)
-    round(date, Month(1), RoundDown)
+    return round(date, Month(1), RoundDown)
 end
 
 function general_station_compare(
@@ -33,7 +33,7 @@ function general_station_compare(
     comparecolnames,
     groupfunc = monthperiod,
     median_group_func = month,
-    timeperiod = (Date(0,1,1), Date(3000, 1, 1)),
+    timeperiod = (Date(0, 1, 1), Date(3000, 1, 1)),
     timecol = "datetime",
     grouped_or_ungrouped = :grouped_data,
     n_obs_weighting = false,
@@ -45,16 +45,15 @@ function general_station_compare(
         eradata = load_era_func(eradatadir, eratype, id)
         (ismissing(eradata) || ismissing(single_station_data)) && continue
         data = innerjoin(single_station_data, eradata; on = timecol)
-        filter!(x->timeperiod[1] <= x.datetime <= timeperiod[2], data)
-        analyzed_data =
-            comparison_summary(
-                data,
-                comparecolnames,
-                timecol;
-                anom_stat = "median",
-                groupfunc,
-                median_group_func,
-            )
+        filter!(x -> timeperiod[1] <= x.datetime <= timeperiod[2], data)
+        analyzed_data = comparison_summary(
+            data,
+            comparecolnames,
+            timecol;
+            anom_stat = "median",
+            groupfunc,
+            median_group_func,
+        )
         analyzed_data = getproperty(analyzed_data, grouped_or_ungrouped)
         newtimecol = Symbol(groupfunc)
         select!(analyzed_data, newtimecol => timecol, Not(newtimecol))

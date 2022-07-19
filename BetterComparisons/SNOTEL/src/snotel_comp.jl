@@ -16,9 +16,14 @@ for basin in ERA.basin_names
             jldopen(joinpath(ERA.NRCSDATA, "cleansed", "SNOTEL_basin_to_id.jld2"))["basin_to_id"]
 
         snotels = basin_to_snotels[basin]
-        basinmean = general_station_compare(eratype, snotels, load_data_func = load_snotel,
-                    comparecolnames = [:era_swe, :snotel_swe], timecol="datetime")
-                    ismissing(basinmean) && continue
+        basinmean = general_station_compare(
+            eratype,
+            snotels;
+            load_data_func = load_snotel,
+            comparecolnames = [:era_swe, :snotel_swe],
+            timecol = "datetime",
+        )
+        ismissing(basinmean) && continue
         push!(eradata, basinmean.basindata)
     end
 
@@ -36,6 +41,6 @@ for basin in ERA.basin_names
         figtitle = "ERA5 vs SNOTEL ($basin) March)",
         stat_swe_name = "snotel_swe_fom_mean",
         era_swe_name = "era_swe_fom_mean",
-        fom_climo_diff_name = "snotel_swe_fom_climo_diff_mean"
+        fom_climo_diff_name = "snotel_swe_fom_climo_diff_mean",
     )
 end

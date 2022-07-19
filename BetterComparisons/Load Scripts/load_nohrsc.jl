@@ -10,7 +10,7 @@ const dict = Dictionary(
     ],
 )
 
-function load_nohrsc(id, eratype="Base")
+function load_nohrsc(id, eratype = "Base")
     if id ∉ keys(dict[eratype])
         return missing
     end
@@ -18,7 +18,7 @@ function load_nohrsc(id, eratype="Base")
     return select(data, :date => ByRow(Date) => :datetime, Not(:date))
 end
 
-function load_nohrsc_only(id, eratype="Base")
+function load_nohrsc_only(id, eratype = "Base")
     if id ∉ keys(dict[eratype])
         return missing
     end

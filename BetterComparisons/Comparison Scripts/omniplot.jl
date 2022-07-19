@@ -1,7 +1,15 @@
 using Plots
 
-function omniplot(; basedat, landdat, basin, figtitle, stat_swe_name, era_swe_name, fom_climo_diff_name)
-    l = grid(2, 2, widths=[0.8, 0.2, 0.8, 0.2])
+function omniplot(;
+    basedat,
+    landdat,
+    basin,
+    figtitle,
+    stat_swe_name,
+    era_swe_name,
+    fom_climo_diff_name,
+)
+    l = grid(2, 2; widths = [0.8, 0.2, 0.8, 0.2])
 
     p1 = plot(
         basedat.datetime,
@@ -42,6 +50,14 @@ function omniplot(; basedat, landdat, basin, figtitle, stat_swe_name, era_swe_na
         xaxis = nothing,
         yaxis = nothing,
     )
-    bp = plot(p1, legendp1, p2, legendp2; layout = l, plot_title = figtitle, plot_titlefontsize = 13)
+    bp = plot(
+        p1,
+        legendp1,
+        p2,
+        legendp2;
+        layout = l,
+        plot_title = figtitle,
+        plot_titlefontsize = 13,
+    )
     return savefig(bp, "../vis/$(basin)_comp.png")
 end

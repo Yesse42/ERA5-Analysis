@@ -19,9 +19,16 @@ for basin in ERA.basin_names
             jldopen(joinpath(ERA.NOHRSCDATA, "$(eratype)_basin_to_flines.jld2"))["basin_to_flines"]
 
         flines = basin_to_flines[basin]
-        basinmean = general_station_compare(eratype, flines; load_data_func = load_nohrsc_only, load_era_func = load_nohrsc_era,
-        comparecolnames = [:mean_era_swe, :gamma], timecol = "datetime",
-        groupfunc = month, median_group_func = month)
+        basinmean = general_station_compare(
+            eratype,
+            flines;
+            load_data_func = load_nohrsc_only,
+            load_era_func = load_nohrsc_era,
+            comparecolnames = [:mean_era_swe, :gamma],
+            timecol = "datetime",
+            groupfunc = month,
+            median_group_func = month,
+        )
         ismissing(basinmean) && continue
         push!(eradata, basinmean.basindata)
     end
@@ -47,6 +54,26 @@ fillcolors = reduce(hcat, (cvec for i in Base.axes(omnidata, 2)))
 xticks = xvals[2:3:end]
 xticklabels = used_basins
 
-p = bar(vec(xvals), vec(omnidata), fillcolor = vec(fillcolors), legend = :topright, label = "", xticks = (xticks, xticklabels), rotation=45)
-plot!(p, title="NOHRSC April Normed Anomaly RMSD", ylabel = "Normed Anomaly Diff RMSD (unitless)", xlabel="Basin")
-bar(p, (1:3)', [NaN, NaN, NaN]', show_axis=false, label = ["ERA5 Land" "Station Climatology" "ERA5 Base"], fillcolor = permutedims(cvec))
+p = bar(
+    vec(xvals),
+    vec(omnidata);
+    fillcolor = vec(fillcolors),
+    legend = :topright,
+    label = "",
+    xticks = (xticks, xticklabels),
+    rotation = 45,
+)
+plot!(
+    p;
+    title = "NOHRSC April Normed Anomaly RMSD",
+    ylabel = "Normed Anomaly Diff RMSD (unitless)",
+    xlabel = "Basin",
+)
+bar(
+    p,
+    (1:3)',
+    [NaN, NaN, NaN]';
+    show_axis = false,
+    label = ["ERA5 Land" "Station Climatology" "ERA5 Base"],
+    fillcolor = permutedims(cvec),
+)

@@ -57,13 +57,16 @@ function comparison_summary(
     #Now calculate the differences, differences in anomalies, and differences in percent of normal
     comparecols_time = [[comparecol; timecol] for comparecol in comparecols]
     anomfuncs = [((x, t) -> x - getmonthstat(t, col)) for col in comparecols]
-    normedanomfuncs = [((x, t) -> (x - getmonthstat(t, col))/getmonthstat(t, col, stat="std")) for col in comparecols]
+    normedanomfuncs = [
+        ((x, t) -> (x - getmonthstat(t, col)) / getmonthstat(t, col; stat = "std")) for
+        col in comparecols
+    ]
     fomfuncs = (((x, t) -> x / getmonthstat(t, col)) for col in comparecols)
     diffdata = transform(
         data,
         (comparecols_time .=> ByRow.(anomfuncs) .=> comparecols .* "_anom")...,
         (comparecols_time .=> ByRow.(fomfuncs) .=> comparecols .* "_fom")...,
-        (comparecols_time .=> ByRow.(normedanomfuncs) .=> comparecols .* "_normed_anom")...
+        (comparecols_time .=> ByRow.(normedanomfuncs) .=> comparecols .* "_normed_anom")...,
     )
     statistic_names = ["_anom", "_normed_anom", "_fom"]
     statcols = permutedims(comparecols) .* statistic_names
@@ -90,7 +93,7 @@ function comparison_summary(
     groupcols = String.([:raw_diff, :anomaly_diff, :normed_anomaly_diff, :fom_diff])
     month_diff_stats = combine(
         group_diff,
-        comparecols => ((x,y)-> sum((!).(ismissing.(x) .|| ismissing.(y)))) => :n_obs,
+        comparecols => ((x, y) -> sum((!).(ismissing.(x) .|| ismissing.(y)))) => :n_obs,
         comparecols .=> mystat(mean) .=> comparecols .* "_mean",
         comparecols .=> mystat(median) .=> comparecols .* "_median",
         statcols .=> mystat(mean) .=> statcols .* "_mean",
@@ -98,9 +101,14 @@ function comparison_summary(
         groupcols .=> mystat(myrmsd) .=> groupcols .* "_rmsd",
         comparecols => my2argstat(cor) => "corr",
         collect.(eachrow(statcols)) .=> my2argstat(cor) .=> statistic_names .* "_corr",
-        comparecols .* "_fom" .=> (x->mystat(mean)(x .- 1)) .=> comparecols .* "_fom_climo_diff_mean",
-        comparecols .* "_fom" .=> (x->mystat(myrmsd)(x .- 1)) .=> comparecols .* "_fom_climo_diff_rmsd",
-        comparecols .* "_normed_anom" .=> (x->mystat(myrmsd)(x.-mystat(mean)(x))) .=> comparecols .* "_normed_anom_climo_diff_rmsd")
+        comparecols .* "_fom" .=>
+            (x -> mystat(mean)(x .- 1)) .=> comparecols .* "_fom_climo_diff_mean",
+        comparecols .* "_fom" .=>
+            (x -> mystat(myrmsd)(x .- 1)) .=> comparecols .* "_fom_climo_diff_rmsd",
+        comparecols .* "_normed_anom" .=>
+            (x -> mystat(myrmsd)(x .- mystat(mean)(x))) .=>
+                comparecols .* "_normed_anom_climo_diff_rmsd",
+    )
 
     return (ungrouped_data = diffdata, grouped_data = month_diff_stats)
 end

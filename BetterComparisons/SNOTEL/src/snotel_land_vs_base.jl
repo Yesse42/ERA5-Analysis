@@ -21,8 +21,14 @@ for mymonth in 1:3
                 jldopen(joinpath(ERA.NRCSDATA, "cleansed", "SNOTEL_basin_to_id.jld2"))["basin_to_id"]
 
             courses = basin_to_courses[basin]
-            basinmean = general_station_compare(eratype, courses; load_data_func = load_snotel, 
-            comparecolnames = [:era_swe, :snotel_swe], timecol = "datetime", groupfunc = month)
+            basinmean = general_station_compare(
+                eratype,
+                courses;
+                load_data_func = load_snotel,
+                comparecolnames = [:era_swe, :snotel_swe],
+                timecol = "datetime",
+                groupfunc = month,
+            )
             ismissing(basinmean) && continue
             push!(eradata, basinmean.basindata)
         end
@@ -49,9 +55,29 @@ for mymonth in 1:3
     xticks = xvals[2:3:end]
     xticklabels = used_basins
 
-    p = bar(vec(xvals), vec(omnidata), fillcolor = vec(fillcolors), legend = :topleft, label = "", xticks = (xticks, xticklabels), rotation=45)
-    plot!(p, title="SNOTEL Month $mymonth FOM Difference RMSD", ylabel = "Fraction of Median RMSD (unitless)", xlabel="Basin")
-    bar!(p, (1:3)', [NaN, NaN, NaN]', show_axis=false, label = ["ERA5 Land" "Station Climatology" "ERA5 Base"], fillcolor = permutedims(cvec))
+    p = bar(
+        vec(xvals),
+        vec(omnidata);
+        fillcolor = vec(fillcolors),
+        legend = :topleft,
+        label = "",
+        xticks = (xticks, xticklabels),
+        rotation = 45,
+    )
+    plot!(
+        p;
+        title = "SNOTEL Month $mymonth FOM Difference RMSD",
+        ylabel = "Fraction of Median RMSD (unitless)",
+        xlabel = "Basin",
+    )
+    bar!(
+        p,
+        (1:3)',
+        [NaN, NaN, NaN]';
+        show_axis = false,
+        label = ["ERA5 Land" "Station Climatology" "ERA5 Base"],
+        fillcolor = permutedims(cvec),
+    )
     display(p)
 end
 
@@ -68,8 +94,14 @@ for mymonth in 4:5
                 jldopen(joinpath(ERA.NRCSDATA, "cleansed", "SNOTEL_basin_to_id.jld2"))["basin_to_id"]
 
             courses = basin_to_courses[basin]
-            basinmean = general_station_compare(eratype, courses; load_data_func = load_snotel, 
-            comparecolnames = [:era_swe, :snotel_swe], timecol = "datetime", groupfunc = month)
+            basinmean = general_station_compare(
+                eratype,
+                courses;
+                load_data_func = load_snotel,
+                comparecolnames = [:era_swe, :snotel_swe],
+                timecol = "datetime",
+                groupfunc = month,
+            )
             ismissing(basinmean) && continue
             push!(eradata, basinmean.basindata)
         end
@@ -96,8 +128,28 @@ for mymonth in 4:5
     xticks = xvals[2:3:end]
     xticklabels = used_basins
 
-    p = bar(vec(xvals), vec(omnidata), fillcolor = vec(fillcolors), legend = :topleft, label = "", xticks = (xticks, xticklabels), rotation=45)
-    plot!(p, title="SNOTEL Month $mymonth Normed Anomaly Diff RMSD", ylabel = "Normed Anomaly (unitless)", xlabel="Basin")
-    bar!(p, (1:3)', [NaN, NaN, NaN]', show_axis=false, label = ["ERA5 Land" "Station Climatology" "ERA5 Base"], fillcolor = permutedims(cvec))
+    p = bar(
+        vec(xvals),
+        vec(omnidata);
+        fillcolor = vec(fillcolors),
+        legend = :topleft,
+        label = "",
+        xticks = (xticks, xticklabels),
+        rotation = 45,
+    )
+    plot!(
+        p;
+        title = "SNOTEL Month $mymonth Normed Anomaly Diff RMSD",
+        ylabel = "Normed Anomaly (unitless)",
+        xlabel = "Basin",
+    )
+    bar!(
+        p,
+        (1:3)',
+        [NaN, NaN, NaN]';
+        show_axis = false,
+        label = ["ERA5 Land" "Station Climatology" "ERA5 Base"],
+        fillcolor = permutedims(cvec),
+    )
     display(p)
 end
