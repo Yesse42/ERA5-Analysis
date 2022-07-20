@@ -67,7 +67,7 @@ for (eratype, erafile) in zip(ERA.eratypes, ERA.erafiles)
         polylat = reduce(vcat, [[point[2] for point in poly] for poly in polys])
         lonbounds, latbounds = (extrema(polylon), extrema(polylat))
         #Get the extent of the plot, with a buffer
-        buff = 1 .* (-1, 1)
+        buff = 0.25 .* (-1, 1)
         lonbounds = lonbounds .+ 3 .* buff
         latbounds = latbounds .+ buff
         plotbounds = [lonbounds..., latbounds...]
