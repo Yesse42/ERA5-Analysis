@@ -61,8 +61,6 @@ function general_station_compare(
         push!(used_stations, id)
     end
 
-    display(station_data[1])
-
     basinmean = basin_aggregate(station_data; timecol = timecol, n_obs_weighting)
 
     if ismissing(basinmean)

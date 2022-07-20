@@ -1,6 +1,6 @@
 include(joinpath(@__DIR__, "../comparison_constants.jl"))
 load_snow_course = let
-    const snow_course_data =
+    snow_course_data =
         CSV.read(joinpath(ERA.NRCSDATA, "cleansed", "Snow_Course_Data.csv"), DataFrame)
 
     function load_snow_course(id)

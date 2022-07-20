@@ -4,10 +4,10 @@ using CSV,
 import ERA5Analysis as ERA
 
 #Some functions to be used later; this one detects a glacier or missing data
-function isglacier(era_sd; glacier_thresh = 0.95)
+function isglacier(era_sd; glacier_thresh = 0.95, min_snow = 1e-3)
     era_sd[ismissing.(era_sd)] .= NaN
-    return ((sum(era_sd .> 0; dims = 3) ./ size(era_sd, 3)) .>= glacier_thresh) .|
-           ismissing.(era_sd[:, :, 1])
+    return ((sum(era_sd .> min_snow; dims = 3) ./ size(era_sd, 3)) .>= glacier_thresh) .||
+           isnan.(era_sd[:, :, 1])
 end
 
 #A special distance function which weights both elevation differences and horizontal ones
@@ -87,7 +87,7 @@ function era_best_neighbors(
         order = sortperm(weight_data[:])
         #Only accept the points with the 4 lowest weights
         for i in order[1:min(4, length(order))]
-            if !isnan(eldiffs[i])
+            if !ismissing(eldiffs[i])
                 idx = Tuple(near_idxs[i])
                 push!(
                     out_neighbor_df,

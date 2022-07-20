@@ -9,11 +9,14 @@ for (eratype, ncpath) in zip(ERA.eratypes, ERA.erafiles)
     times = data["time"][:]
     sd = data["sd"][:]
     for row in eachrow(nearby_point_idxs)
-        data = sd[row.lonidx, row.latidx, :]
-        if any(ismissing.(data))
+        sd_at_loc = sd[row.lonidx, row.latidx, :]
+        if string(row.stat_id) == "964"
+            display(sd_at_loc)
+        end
+        if all(ismissing.(sd_at_loc))
             continue
         end
-        CSV.write("../$(eratype)/$(row.stat_id).csv", DataFrame(; sd = data))
+        CSV.write("../$(eratype)/$(row.stat_id).csv", DataFrame(; sd = sd_at_loc))
     end
     CSV.write("../$(eratype)/times.csv", DataFrame(; datetime = times))
 end

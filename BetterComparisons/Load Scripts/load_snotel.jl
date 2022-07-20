@@ -1,7 +1,7 @@
 include(joinpath(@__DIR__, "../comparison_constants.jl"))
 
 load_snotel = let
-    const snotel_data =
+    snotel_data =
         CSV.read(joinpath(ERA.NRCSDATA, "cleansed", "SNOTEL_Data.csv"), DataFrame)
 
     function load_snotel(id)
