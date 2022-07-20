@@ -35,3 +35,8 @@ erafiles =
     ["ERA5-SD-1979-2022-CREATE-2022-06-16.nc", "ERA5-Land-SD-1979-2022-DL-2022-6-15.nc"]
 
 special_snotels = string.([954, 949, 1189, 1182, 1096])
+
+na_or_miss(x) = ismissing(x) || isnan(x)
+not_na_or_miss(x) = (!)(na_or_miss(x))
+skipnaormiss(x) = Iterators.filter(not_na_or_miss, x)
+Base.length(x::Base.Iterators.Filter{typeof(not_na_or_miss), T}) where T = count(not_na_or_miss, x)
