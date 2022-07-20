@@ -19,6 +19,7 @@ for network in ERA.networktypes
         transform!(
             stationdata,
             :datetime => ByRow(t -> Dates.round(t, Month(1), RoundDown)) => :datetime,
+            swename.=>(x ->x .* ERA.meters_to_inch .* 1e-3)=>swename
         )
         month_group = groupby(stationdata, :datetime)
         myskipmiss(x) =
@@ -37,7 +38,7 @@ for network in ERA.networktypes
             monthly_stats.datetime,
             Array(monthly_stats[:, Not(:datetime)]);
             title = "$(row.Name) in $(row.Basin), ID: $(row.ID)",
-            ylabel = "SWE (mm)",
+            ylabel = "SWE (in)",
             xlabel = "Date",
             label = ["min" "mean" "max"],
             legend = :topleft,

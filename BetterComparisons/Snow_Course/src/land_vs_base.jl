@@ -59,6 +59,7 @@ p = bar(
     label = "",
     xticks = (xticks, xticklabels),
     rotation = 45,
+    dpi = 300
 )
 plot!(
     p;
@@ -66,7 +67,7 @@ plot!(
     ylabel = "Fraction of Median RMSD (unitless)",
     xlabel = "Basin",
 )
-bar(
+bar!(
     p,
     (1:3)',
     [NaN, NaN, NaN]';
@@ -74,3 +75,5 @@ bar(
     label = ["ERA5 Land" "Station Climatology" "ERA5 Base"],
     fillcolor = permutedims(cvec),
 )
+
+savefig(p, "../vis/basin_summary.png")
