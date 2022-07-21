@@ -28,6 +28,7 @@ for mymonth in 1:3
                 comparecolnames = [:era_swe, :snotel_swe],
                 timecol = "datetime",
                 groupfunc = month,
+                eradatadir = joinpath(ERA.ERA5DATA, "extracted_points")
             )
             ismissing(basinmean) && continue
             push!(eradata, basinmean.basindata)

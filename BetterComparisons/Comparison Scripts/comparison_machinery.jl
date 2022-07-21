@@ -37,6 +37,7 @@ function general_station_compare(
     timecol = "datetime",
     grouped_or_ungrouped = :grouped_data,
     n_obs_weighting = false,
+    eradatadir = eradatadir,
 )
     station_data = DataFrame[]
     used_stations = String[]

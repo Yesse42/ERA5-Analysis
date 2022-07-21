@@ -24,6 +24,7 @@ for basin in ERA.basin_names
             timecol = "datetime",
             groupfunc = shifted_monthperiod,
             median_group_func = shifted_month,
+            eradatadir = joinpath(ERA.ERA5DATA, "extracted_points")
         )
         push!(eradata, basinmean.basindata)
     end

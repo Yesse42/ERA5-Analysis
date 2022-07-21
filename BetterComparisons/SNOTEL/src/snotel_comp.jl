@@ -22,6 +22,7 @@ for basin in ERA.basin_names
             load_data_func = load_snotel,
             comparecolnames = [:era_swe, :snotel_swe],
             timecol = "datetime",
+            eradatadir = joinpath(ERA.ERA5DATA, "extracted_points")
         )
         ismissing(basinmean) && continue
         push!(eradata, basinmean.basindata)
