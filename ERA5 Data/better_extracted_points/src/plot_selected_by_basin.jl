@@ -62,11 +62,19 @@ for (eratype, erafile) in zip(ERA.eratypes, ERA.erafiles)
             ax.add_patch(poly_plot)
         end
 
+        extrema_of_extrema(extremas) = (minimum(e[1] for e in extremas), maximum(e[2] for e in extremas))
+
         #Now get the bounding box 
-        polylon = reduce(vcat, [[point[1] for point in poly] for poly in polys])
-        polylat = reduce(vcat, [[point[2] for point in poly] for poly in polys])
-        lonbounds, latbounds = (extrema(polylon), extrema(polylat))
-        #Get the extent of the plot, with a buffer
+        basinids = string.(vcat(getindex.(stationtype_ids, basin)...))
+        era_subset = filter(x -> string(x.id) in basinids, era_chosen_points)
+        eralonbounds, eralatbounds = extrema(getindex.(Ref(lon),era_subset.lonidx)),
+                                extrema(getindex.(Ref(lat),era_subset.latidx))
+        station_subset = filter(x -> string(x.ID) in basinids, station_meta)
+        statlonbounds, statlatbounds = extrema(station_subset.Longitude),
+                                extrema(station_subset.Latitude)
+        lonbounds = extrema_of_extrema((eralonbounds, statlonbounds))
+        latbounds = extrema_of_extrema((eralatbounds, statlatbounds))
+        
         buff = 0.25 .* (-1, 1)
         lonbounds = lonbounds .+ 3 .* buff
         latbounds = latbounds .+ buff

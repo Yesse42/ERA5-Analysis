@@ -66,7 +66,7 @@ for eratype in ERA.eratypes
                 lonlatballtree,
                 elevationdata,
                 stationmetadata,
-                searchwindow = CartesianIndex(15, 5),
+                searchwindow = CartesianIndex(39, 13),
                 metric_func,
             )
             ismissing(out) && continue
