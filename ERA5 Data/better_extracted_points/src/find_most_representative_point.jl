@@ -59,3 +59,31 @@ function era_best_neighbor(;
         return (;best = used_ids[return_idx], used_ids, neighbor_scores)
     end
 end
+
+function best_points(;eratype, sd, eratime, glaciermask, lonlatgrid, lonlatballtree, elevationdata,
+                    metadatas, network_metrics, searchwindow)
+
+    best_neighbor_df = DataFrame(id = [], best = [], score_array = [], idx_array = [])
+    for networktype in ERA.networktypes
+        metadata = metadatas[networktype]
+        metric_func = network_metrics[networktype]
+        for stationmetadata in eachrow(metadata)
+            out = era_best_neighbor(;
+                eratype,
+                sd,
+                eratime,
+                glaciermask,
+                lonlatgrid,
+                lonlatballtree,
+                elevationdata,
+                stationmetadata,
+                searchwindow,
+                metric_func,
+            )
+            ismissing(out) && continue
+            push!(best_neighbor_df, (id = stationmetadata.ID, 
+            best = Tuple(out.best), score_array = out.neighbor_scores, idx_array = out.used_ids))
+        end
+    end
+    return best_neighbor_df
+end

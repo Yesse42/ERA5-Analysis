@@ -1,6 +1,6 @@
 using DataFrames, StatsBase
 
-timemetric(timefilterfunc, deviationfunc) = 
+custommetric(timefilterfunc, deviationfunc) = 
 function metric(;eratype, stationmetadata, glacierbool, eralonlat, 
     eraelevation, eravals, stationvals, times)
 
@@ -9,7 +9,7 @@ function metric(;eratype, stationmetadata, glacierbool, eralonlat,
 
     #Now the messier stuff. For this metric I first filter for the desired times, and then calculate the 
     #percent of median rmsd
-    t_mask = timefilterfunc.(times)
+    t_mask = timefilterfunc(times)
 
     return @views deviationfunc(times[t_mask], eravals[t_mask], stationvals[t_mask])
 end
@@ -31,8 +31,8 @@ function pom_rmsd(time, era, stat; median_groupfunc)
     return StatsBase.rmsd(poms.stat, poms.era)
 end
 
-march_func(time) = month(time) == 3
-endmarch_beginapril(time) = month(time+Day(16))==4
+march_func(time) = month.(time) .== 3
+endmarch_beginapril(time) = month.(time.+Day(16)).==4
 
-snotelmetric = timemetric(march_func, (x...)->pom_rmsd(x...; median_groupfunc = month))
-coursemetric = timemetric(endmarch_beginapril, (x...)->pom_rmsd(x...; median_groupfunc = (x->1)))
+snotelmetric = custommetric(march_func, (x...)->pom_rmsd(x...; median_groupfunc = month))
+coursemetric = custommetric(endmarch_beginapril, (x...)->pom_rmsd(x...; median_groupfunc = (x->1)))
