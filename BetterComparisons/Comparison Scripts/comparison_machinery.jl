@@ -55,6 +55,7 @@ function general_station_compare(
             groupfunc,
             median_group_func,
         )
+        ismissing(analyzed_data) && continue
         analyzed_data = getproperty(analyzed_data, grouped_or_ungrouped)
         newtimecol = Symbol(groupfunc)
         select!(analyzed_data, newtimecol => timecol, Not(newtimecol))

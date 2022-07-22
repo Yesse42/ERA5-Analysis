@@ -6,6 +6,8 @@ import ERA5Analysis as ERA
 include("metric_defs.jl")
 include("find_most_representative_point.jl")
 
+const windowsize = CartesianIndex(9,3)
+
 #Some functions to be used later; this one detects a glacier or missing data
 function isglacier(era_sd; glacier_thresh = 0.95, min_snow = 1e-3)
     era_sd[ismissing.(era_sd)] .= NaN
@@ -19,21 +21,6 @@ glacier_masks = Dictionary{String, Array{Bool, 2}}()
 elevations_datas = Dictionary{String, Array{Float32, 2}}()
 lonlatgrids = Dictionary{String, Array{SVector{2, Float32}, 2}}()
 times = Dictionary{String, Vector{Date}}()
-
-fold_types = ["Every 3rd year", "3 periods"]
-
-"Returns true every nth year"
-every_nth_year(n_folds, foldnum) = function f(timevec)
-    timeyears = unique(year(t) for t in timevec)
-    year_to_in_fold = Dictionary(timeyears, ((0:length(timeyears)-1) .% n_folds) .== (foldnum - 1))
-    return getindex.(Ref(year_to_in_fold), year.(timevec))
-end
-"Returns true for the foldnumth section of the n_folds the timeseries is evenly split into"
-n_periods(n_folds, foldnum) = function f(timevec)
-    timeyears = unique(year(t) for t in timevec)
-    year_to_in_fold = Dictionary(timeyears, fld.(0:length(timeyears)-1, length(timeyears)/n_folds) .== (foldnum - 1))
-    return getindex.(Ref(year_to_in_fold), year.(timevec))
-end
 
 for (eratype, erafile) in zip(ERA.eratypes, ERA.erafiles)
     sd_data = Dataset("$(ERA.ERA5DATA)/$eratype/$erafile", "r")
@@ -57,9 +44,16 @@ end
 
 all_metadatas = Dictionary(ERA.networktypes, 
 CSV.read.(joinpath.(ERA.NRCSDATA, "cleansed", ERA.networktypes.*"_Metadata.csv"), DataFrame))
-network_metrics = Dictionary(ERA.networktypes, [snotelmetric, coursemetric])
 
+savedir = "../plain_nn"
 
+function plain_distance(;kwargs...) 
+    #Check that this isn't on the sea or glacier
+    all(val == 0 for val in kwargs[:eravals]) || kwargs[:glacierbool] && return Inf
+    sdata = kwargs[:stationmetadata]
+    statlonlat = SVector(sdata.Longitude, sdata.Latitude)
+    return Distances.Haversine{Float64}()(kwargs[:eralonlat], statlonlat)
+end
 
 for eratype in ERA.eratypes
     sd = sds[eratype]
@@ -69,8 +63,15 @@ for eratype in ERA.eratypes
     lonlatballtree = BallTree(vec(lonlatgrid), Distances.Haversine{Float32}())
     elevationdata = elevations_datas[eratype]
 
-    outdf = best_points(;eratype, sd, eratime, glaciermask, lonlatgrid, lonlatballtree, elevationdata,
-    metadatas, network_metrics, searchwindow = CartesianIndex(15, 5))
-    select!(outdf, :id, :best=>collect=>[:lonidx, :latidx])
-    CSV.write("../data/$(eratype)_best_ids.csv", outdf)
+    nn_points = best_points(;eratype, sd, eratime, glaciermask, lonlatgrid, lonlatballtree, elevationdata,
+    metadatas, network_metrics = Dict(ERA.networktypes.=>plain_distance), searchwindow = windowsize)
+    CSV.write("$savedir/$(eratype)_best_ids.csv", select(nn_points, :id, :best=>collect=>[:lonidx, :latidx]))
+    for row in eachrow(nn_points)
+        sd_at_loc = sd[row.best..., :]
+        if all(ismissing.(sd_at_loc))
+            continue
+        end
+        CSV.write(joinpath(savedir, "$(eratype)/$(row.id).csv"), DataFrame(; sd = sd_at_loc))
+    end
+    CSV.write(joinpath(savedir, "$(eratype)/times.csv"), DataFrame(; datetime = eratime))
 end

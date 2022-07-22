@@ -24,18 +24,20 @@ function era_best_neighbor(;
 
     station_loc = SVector(stationmetadata.Longitude, stationmetadata.Latitude)
 
+    stationload_func = if stationmetadata.Network == "SNOTEL" load_snotel else load_snow_course end
+    stationvals = stationload_func(stationmetadata.ID)
+    rename!(stationvals, [:datetime, :station])
+
     nn_id = getindex(CartesianIndices(lonlatgrid), nn(lonlatballtree, station_loc)[1])
 
     used_ids = CartesianIndex{2}[]
     neighbor_scores = nothing
+    conjoined_time = nothing
     #Now loop through the search window, evaluating the metric at each point and storing the value
     for I in max(nn_id-searchwindow, CartesianIndex(1,1)):min(nn_id+searchwindow, CartesianIndex(size(lonlatgrid)))
         push!(used_ids, I)
 
         eravals = @view sd[I, :]
-        stationload_func = if stationmetadata.Network == "SNOTEL" load_snotel else load_snow_course end
-        stationvals = stationload_func(stationmetadata.ID)
-        rename!(stationvals, [:datetime, :station])
         eradata = DataFrame(;datetime = eratime, era = eravals, copycols = false)
 
         combo = dropmissing!(innerjoin(eradata, stationvals; on=:datetime))
@@ -80,9 +82,12 @@ function best_points(;eratype, sd, eratime, glaciermask, lonlatgrid, lonlatballt
                 searchwindow,
                 metric_func,
             )
-            ismissing(out) && continue
-            push!(best_neighbor_df, (id = stationmetadata.ID, 
-            best = Tuple(out.best), score_array = out.neighbor_scores, idx_array = out.used_ids))
+            if ismissing(out)
+                push!(best_neighbor_df, (id=stationmetadata.ID, best=missing, score_array=missing, idx_array = missing))
+            else
+                push!(best_neighbor_df, (id = stationmetadata.ID, best = Tuple(out.best), 
+                score_array = out.neighbor_scores, idx_array = out.used_ids))
+            end
         end
     end
     return best_neighbor_df

@@ -5,7 +5,7 @@ function metric(;eratype, stationmetadata, glacierbool, eralonlat,
     eraelevation, eravals, stationvals, times)
 
     #Get the quick stuff out of the way first
-    (isempty(eravals) || glacierbool) && return Inf
+    (isempty(eravals) || glacierbool || all(val==0 for val in eravals)) && return Inf
 
     #Now the messier stuff. For this metric I first filter for the desired times, and then calculate the 
     #percent of median rmsd

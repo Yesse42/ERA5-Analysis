@@ -8,7 +8,7 @@ include(joinpath(ERA.COMPAREDIR, "Load Scripts", "load_era.jl"))
 include(joinpath(ERA.COMPAREDIR, "Comparison Scripts", "omniplot.jl"))
 include(joinpath(ERA.COMPAREDIR, "Comparison Scripts", "comparison_machinery.jl"))
 
-for basin in ERA.basin_names
+for basin in ERA.usable_basins
     eradata = DataFrame[]
 
     for eratype in ERA.eratypes

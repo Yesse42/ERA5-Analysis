@@ -13,7 +13,7 @@ for mymonth in 1:3
     land_pom_rmsd = []
     base_pom_rmsd = []
     climo_pom_rmsd = []
-    for basin in ERA.basin_names
+    for basin in ERA.usable_basins
         eradata = DataFrame[]
 
         for eratype in ERA.eratypes
@@ -87,7 +87,7 @@ for mymonth in 4:5
     land_pom_rmsd = []
     base_pom_rmsd = []
     climo_pom_rmsd = []
-    for basin in ERA.basin_names
+    for basin in ERA.usable_basins
         eradata = DataFrame[]
 
         for eratype in ERA.eratypes

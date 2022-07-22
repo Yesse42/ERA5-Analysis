@@ -26,6 +26,16 @@ const basin_names = [
     "Norton Sound",
     "Lynn Canal",
 ]
+
+const usable_basins = [
+    "Chena",
+    "Copper",
+    "Kenai",
+    "Eastern Interior",
+    "Northern Interior",
+    "Lower Yukon",
+    "Lynn Canal",
+]
 const meters_to_inch = 39.3701
 
 ak_bounds = [-171, -129, 50, 72]
@@ -33,6 +43,8 @@ eratypes = ["Base", "Land"]
 networktypes = ["SNOTEL", "Snow_Course"]
 erafiles =
     ["ERA5-SD-1979-2022-CREATE-2022-06-16.nc", "ERA5-Land-SD-1979-2022-DL-2022-6-15.nc"]
+
+foldtypes = ["Every 3rd year", "3 periods"]
 
 special_snotels = string.([954, 949, 1189, 1182, 1096])
 
