@@ -1,53 +1,14 @@
 cd(@__DIR__)
 burrowactivate()
-using CSV, DataFrames, Dates, NCDatasets, NearestNeighbors, Dictionaries, Distances, StaticArrays
+using CSV, DataFrames, Dates, NCDatasets, NearestNeighbors, Dictionaries, Distances, StaticArrays, InlineStrings
 import ERA5Analysis as ERA
 
-const windowsize = CartesianIndex(9, 3)
+const windowsize = CartesianIndex(6, 2)
 
 include("metric_defs.jl")
 include("find_most_representative_point.jl")
 
-if !isdefined(Main, :randomthingthatIwillneverusenaywhereelse82764r56478i3kejnbfgyrueikjmnd)
-    const randomthingthatIwillneverusenaywhereelse82764r56478i3kejnbfgyrueikjmnd = true
-    #Some functions to be used later; this one detects a glacier or missing data
-    function isglacier(era_sd; glacier_thresh = 0.95, min_snow = 1e-3)
-        era_sd[ismissing.(era_sd)] .= NaN
-        return ((sum(era_sd .> min_snow; dims = 3) ./ size(era_sd, 3)) .>= glacier_thresh) .||
-            isnan.(era_sd[:, :, 1])
-    end
-
-    #Pre-load some stuff
-    sds = Dictionary{String, Any}()
-    glacier_masks = Dictionary{String, Array{Bool, 2}}()
-    elevations_datas = Dictionary{String, Array{Float32, 2}}()
-    lonlatgrids = Dictionary{String, Array{SVector{2, Float32}, 2}}()
-    times = Dictionary{String, Vector{Date}}()
-
-    for (eratype, erafile) in zip(ERA.eratypes, ERA.erafiles)
-        sd_data = Dataset("$(ERA.ERA5DATA)/$eratype/$erafile", "r")
-        sd = sd_data["sd"][:]
-        elev_data = Dataset(
-            "$(ERA.ERA5DATA)/extracted_points/data/$(eratype)_aligned_elevations.nc",
-            "r",
-        )
-        elevations = elev_data["elevation_m"][:]
-        glacier_mask = isglacier(sd_data["sd"][:])
-        lonlatgrid = SVector.(sd_data["longitude"][:], sd_data["latitude"][:]')
-        time = Date.(sd_data["time"][:])
-        insert!.(
-            [glacier_masks, elevations_datas, lonlatgrids, times, sds],
-            eratype,
-            [glacier_mask[:, :], elevations, lonlatgrid, time, sd],
-        )
-        close(sd_data)
-        close(elev_data)
-    end
-
-    metadatas = Dictionary(ERA.networktypes, 
-    CSV.read.(joinpath.(ERA.NRCSDATA, "cleansed", ERA.networktypes.*"_Metadata.csv"), DataFrame))
-    transform!.(metadatas, :ID=>ByRow(string)=>:ID)
-end
+include(joinpath(ERA.SCRIPTPATH, "load_era_data.jl"))
 
 include.(joinpath.(ERA.COMPAREDIR, "Load Scripts", "load_" .* ["snow_course", "snotel"] .*".jl"))
 
@@ -55,7 +16,7 @@ const monthfunc_by_type = (march_func, endmarch_beginapril)
 
 function get_station_times(station)
     data=nothing
-    if all(isnumeric(char) for char in station)
+    if all(isnumeric(char) for char in string(station))
         data = load_snotel(station)
         data = data[monthfunc_by_type[1](data.datetime), :]
     else
@@ -155,6 +116,6 @@ for eratype in ERA.eratypes
         savedir = joinpath(savearea, fold_type, eratype)
         mkpath(savedir)
         jldsave(joinpath(savedir, "eradata.jld2"), station_to_data = out_dict)
-        jldsave(joinpath(savedir, "indices.jld2"), station_to_indices = out_dict)
+        jldsave(joinpath(savedir, "indices.jld2"), station_to_indices = out_locs)
     end
 end

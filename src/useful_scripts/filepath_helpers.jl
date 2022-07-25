@@ -6,3 +6,4 @@ const COMPARISONS = joinpath(PROJECTPATH, "COMPARISONS")
 const BASINDATA = joinpath(PROJECTPATH, "Basin Data")
 const COMPAREDIR = joinpath(PROJECTPATH, "BetterComparisons")
 const CLIMODIR = joinpath(PROJECTPATH, "Climatology")
+const SCRIPTPATH = @__DIR__

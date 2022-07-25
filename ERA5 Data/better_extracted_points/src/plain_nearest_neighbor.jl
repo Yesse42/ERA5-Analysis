@@ -15,35 +15,7 @@ function isglacier(era_sd; glacier_thresh = 0.95, min_snow = 1e-3)
            isnan.(era_sd[:, :, 1])
 end
 
-#Pre-load some stuff
-sds = Dictionary{String, Any}()
-glacier_masks = Dictionary{String, Array{Bool, 2}}()
-elevations_datas = Dictionary{String, Array{Float32, 2}}()
-lonlatgrids = Dictionary{String, Array{SVector{2, Float32}, 2}}()
-times = Dictionary{String, Vector{Date}}()
-
-for (eratype, erafile) in zip(ERA.eratypes, ERA.erafiles)
-    sd_data = Dataset("$(ERA.ERA5DATA)/$eratype/$erafile", "r")
-    sd = sd_data["sd"][:]
-    elev_data = Dataset(
-        "$(ERA.ERA5DATA)/extracted_points/data/$(eratype)_aligned_elevations.nc",
-        "r",
-    )
-    elevations = elev_data["elevation_m"][:]
-    glacier_mask = isglacier(sd_data["sd"][:])
-    lonlatgrid = SVector.(sd_data["longitude"][:], sd_data["latitude"][:]')
-    time = Date.(sd_data["time"][:])
-    insert!.(
-        [glacier_masks, elevations_datas, lonlatgrids, times, sds],
-        eratype,
-        [glacier_mask[:, :], elevations, lonlatgrid, time, sd],
-    )
-    close(sd_data)
-    close(elev_data)
-end
-
-all_metadatas = Dictionary(ERA.networktypes, 
-CSV.read.(joinpath.(ERA.NRCSDATA, "cleansed", ERA.networktypes.*"_Metadata.csv"), DataFrame))
+include(joinpath(ERA.SCRIPTPATH, "load_era_data.jl"))
 
 savedir = "../plain_nn"
 

@@ -1,5 +1,5 @@
 chena_basin_ids = ["19080306"]
-copper_ids = ["190201"]
+copper_ids = ["190201", "1908030403"]
 kenai_ids = ["190203"]
 southeast_ids = ["190705"]
 northern_ids = ["19090101", "19090102", "19090104"]
@@ -37,6 +37,9 @@ const usable_basins = [
     "Lynn Canal",
 ]
 const meters_to_inch = 39.3701
+const mm_to_inch = 0.0393701
+
+const hucsizes = [6,8,10]
 
 ak_bounds = [-171, -129, 50, 72]
 eratypes = ["Base", "Land"]

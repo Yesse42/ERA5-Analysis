@@ -5,8 +5,8 @@ using Dictionaries, DataFrames, Shapefile, JLD2, StaticArrays
 
 polydict = Dictionary{String, Vector{Vector{SVector{2, Float32}}}}()
 
-huc_paths = "HUC_Shapes/WBDHU" .* string.([6, 8]) .* ".shp"
-shapes = Dictionary([6, 8], Shapefile.Table.(huc_paths))
+huc_paths = "HUC_Shapes/WBDHU" .* string.(ERA.hucsizes) .* ".shp"
+shapes = Dictionary(ERA.hucsizes, Shapefile.Table.(huc_paths))
 
 include("shape_poly_to_sarrs.jl")
 

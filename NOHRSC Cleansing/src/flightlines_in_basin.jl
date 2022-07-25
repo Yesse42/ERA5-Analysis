@@ -18,9 +18,9 @@ transform!(
     :geometry => ByRow(geom -> only(shape_poly_to_sarrs(geom))) => :polygon,
 )
 
-basin_shape_paths = "$(ERA.BASINDATA)/HUC_Shapes/WBDHU" .* string.([6, 8]) .* ".shp"
+basin_shape_paths = "$(ERA.BASINDATA)/HUC_Shapes/WBDHU" .* string.(ERA.hucsizes) .* ".shp"
 
-basin_shapes = Dictionary([6, 8], DataFrame.(Shapefile.Table.(basin_shape_paths)))
+basin_shapes = Dictionary(ERA.hucsizes, DataFrame.(Shapefile.Table.(basin_shape_paths)))
 
 basin_polys = Dictionary{String, Vector{Vector{SVector{2, Float64}}}}()
 for (basin_hucs, basin) in zip(ERA.allowed_hucs, ERA.basin_names)
