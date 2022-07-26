@@ -37,8 +37,6 @@ for network in ERA.networktypes
     basin_from_id =
         Dict([id => basin for (basin, ids) in collect(pairs(basin_to_id)) for id in ids])
 
-    display(basin_to_id)
-
     jldsave("../data/cleansed/$(network)_basin_to_id.jld2"; basin_to_id = basin_to_id)
     id_indices = findall(id -> id in reduce(vcat, collect(basin_to_id)), metadata.ID)
     new_metadata = metadata[id_indices, :]

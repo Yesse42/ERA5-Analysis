@@ -4,10 +4,13 @@ load_snow_course = let
     snow_course_data =
         CSV.read(joinpath(ERA.NRCSDATA, "cleansed", "Snow_Course_Data.csv"), DataFrame)
 
+    courses = names(snow_course_data)
+
     function load_snow_course(id)
-        cols = ["datetime", "SWE_$id"]
-        cols[2] ∉ names(snow_course_data) && return missing
+        cols = ["datetime_$id", "SWE_$id"]
+        cols[2] ∉ courses && return missing
         outdata = rename(snow_course_data[:, cols], ["datetime", "snow_course_swe"])
+        dropmissing!(outdata)
         return transform!(outdata, :datetime => ByRow(Date) => :datetime, :snow_course_swe=>ByRow(passmissing(Float32))=>:snow_course_swe)
     end
 end

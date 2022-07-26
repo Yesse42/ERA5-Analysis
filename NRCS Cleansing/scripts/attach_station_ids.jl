@@ -4,8 +4,8 @@ datadir(paths...) = joinpath("../data/", paths...)
 using CSV, DataFrames, Dates
 import ERA5Analysis as ERA
 
-snotelpath = datadir("raw", "AK_SNOTEL_14-06-2022.csv")
-snowcoursepath = datadir("raw", "AK_SNOW_COURSE.csv")
+snotelpath = datadir("raw", "AK_SNOTEL.csv")
+snowcoursepath = datadir("raw", "AK_SNOW_COURSE.txt")
 metapath = datadir("raw", "Map metadata export.csv")
 
 outdir = datadir("cleansed")
@@ -20,44 +20,60 @@ select!(
     :Elevation_ft => ByRow(x -> x * 0.3048) => :Elevation_m,
     Not(:Elevation_ft),
 )
-snotel = CSV.read(snotelpath, DataFrame; header = 130)
-snow_course = CSV.read(snowcoursepath, DataFrame; header = 251)
+snotel = CSV.read(snotelpath, DataFrame; header = 109, delim = ',')
+snow_course = CSV.read(snowcoursepath, DataFrame; header = 391, delim = ',')
 
 #Now extract the names of the locations and use the metadata to get the Hydrologic Unit Code
 #Names are lines 25-97
-snotel_names = readlines(open(snotelpath))[25:97]
-#Lines 25-218
-course_names = readlines(open(snowcoursepath))[25:218]
-#Now transform these into more amenable forms
-snotel_regex = r"(?:SNOTEL )([0-9]*)"
-snotel_ids = [match(snotel_regex, name).captures[1] for name in snotel_names]
-
-course_regex = r"(?:AERIAL MARKER )([0-9A-Z]*)"
-course_ids = [match(course_regex, name).captures[1] for name in course_names]
-
-#Now finally rename the columns of the raw data with these ids
-rename!(snotel, vcat("Date", (["SWE", "Depth"] .* "_" .* permutedims(snotel_ids))[:]))
-rename!(snow_course, vcat("Date", (["SWE", "Depth"] .* "_" .* permutedims(course_ids))[:]))
-snow_course.Date = begin
-    #Parse the horrendous format
-    month_to_num = Dates.LOCALES["english"].month_abbr_value
-    "Jun 2nd Half 1981"
-    function horrid_date_to_nice_date(str)
-        monthnum = month_to_num[str[1:3]]
-        year = parse(Int, str[14:17])
-        half_ind = parse(Int, str[5])
-        dayofmonth = 1 + (daysinmonth(year, monthnum)) ÷ 2 * (half_ind - 1)
-        return Date(year, monthnum, dayofmonth)
+function extract_colname(colname)
+    colname == "Date" && return colname
+    id = match(r"(?:\()([0-9]+[A-Z]*[0-9]+)", colname)
+    id = only(id.captures)
+    dtype = 
+    if occursin("Snow Water Equivalent Collection Date Start of Month Values", colname)
+        "datetime"
+    elseif occursin("Snow Water Equivalent (mm)", colname)
+        "SWE"
     end
-    horrid_date_to_nice_date.(snow_course.Date)
+    return "$(dtype)_$(id)"
 end
-display(snow_course)
+course_ids = extract_colname.(names(snow_course))
+rename!(snow_course, course_ids)
+snotel_ids = extract_colname.(names(snotel))
+rename!(snotel, snotel_ids)
+course_ids = course_ids[2:end]
+snotel_ids = snotel_ids[2:end]
+
+"They give a Date column of 'Apr 1958' and a collection date formatted like 'Apr 28'"
+function nasty_date_parser(monthday, monthyear)
+    (ismissing(monthday) || monthday == "\t")&& return missing
+    str_to_month = Dates.LOCALES["english"].month_abbr_value
+    numregex = r"[0-9]+"
+    year = parse(Int, match(numregex, monthyear).match)
+    collection_month = str_to_month[monthday[1:3]]
+    day = parse(Int, match(numregex, monthday).match)
+    report_month = str_to_month[monthyear[1:3]]
+    #Snow course results for January could possibly have been taken at the end of december
+    if report_month == 1 && collection_month == 12
+        year -= 1
+    end
+    return Date(year, collection_month, day)
+end
+
+#Now handle the atrocious date formatting
+timenames = filter!(str->occursin("datetime", str), course_ids)
+date_parse_cols = [[name, "Date"] for name in timenames]
+select!(snow_course, Not(timenames), 
+    date_parse_cols.=>ByRow(nasty_date_parser).=>timenames)
+
 for df in [snotel, snow_course]
-    select!(df, :Date => :datetime, r"SWE")
+    select!(df, :Date => :datetime, Not(:Date))
     #Remove any columns that are entirely missing
     notallmissing_col = [!all(ismissing.(col)) for col in eachcol(df)]
     select!(df, names(df)[notallmissing_col])
 end
+
+filter!(row->any(occursin.(row.ID, [names(snow_course); names(snotel)])), metadata)
 
 #Now save the new stuff
 CSV.write(joinpath(outdir, "Metadata.csv"), metadata)

@@ -5,23 +5,25 @@ import ERA5Analysis as ERA
 
 #We just want to plot every SNOTEL's monthly min, mean, and max and all avilable Snow Course observations to ensure
 #that nothing fishy is going on
+all_metadata = CSV.read("../data/cleansed/Metadata.csv", DataFrame)
 
 for network in ERA.networktypes
     data = CSV.read("../data/cleansed/$(network)_Data.csv", DataFrame)
-    metadata = CSV.read("../data/cleansed/$(network)_Metadata.csv", DataFrame)
+    metadata = filter(x->x.Network == network, all_metadata)
     for row in eachrow(metadata)
         station = string(row.ID)
+        timename = if network == "SNOTEL" "datetime" else "datetime_$station" end
         swename = "SWE_$station"
-        stationdata = data[:, ["datetime", swename]]
+        stationdata = data[:, [timename, swename]]
         dropmissing!(stationdata)
 
         #Now groupby month
         transform!(
             stationdata,
-            :datetime => ByRow(t -> Dates.round(t, Month(1), RoundDown)) => :datetime,
+            timename => ByRow(t -> Dates.round(t, Month(1), RoundDown)) => timename,
             swename.=>(x ->x .* ERA.meters_to_inch .* 1e-3)=>swename
         )
-        month_group = groupby(stationdata, :datetime)
+        month_group = groupby(stationdata, timename)
         myskipmiss(x) =
             if all(ismissing.(x))
                 return [missing]
@@ -35,9 +37,9 @@ for network in ERA.networktypes
 
         #And now plot
         myplot = plot(
-            monthly_stats.datetime,
-            Array(monthly_stats[:, Not(:datetime)]);
-            title = "$(row.Name) in $(row.Basin), ID: $(row.ID)",
+            monthly_stats[!, timename],
+            Array(monthly_stats[:, Not(timename)]);
+            title = "$(row.Name) in $(row.County), ID: $(row.ID)",
             ylabel = "SWE (in)",
             xlabel = "Date",
             label = ["min" "mean" "max"],
