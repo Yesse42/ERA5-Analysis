@@ -15,6 +15,8 @@ function isglacier(era_sd; glacier_thresh = 0.95)
            ismissing.(era_sd[:, :, 1])
 end
 
+point_data_dir = "../plain_nn"
+
 basin_to_polys = jldopen(joinpath(ERA.BASINDATA, "basin_to_polys.jld2"))["basin_to_polys"]
 basin_to_snotel =
     jldopen(joinpath(ERA.NRCSDATA, "cleansed", "SNOTEL_basin_to_id.jld2"))["basin_to_id"]
@@ -25,7 +27,7 @@ station_meta = CSV.read(joinpath(ERA.NRCSDATA, "cleansed", "Metadata.csv"), Data
 stationtype_ids = (basin_to_snotel, basin_to_snow_course)
 
 for (eratype, erafile) in zip(ERA.eratypes, ERA.erafiles)
-    era_chosen_points = CSV.read("../cheater_data/$(eratype)_best_ids.csv", DataFrame)
+    era_chosen_points = CSV.read("$point_data_dir/$(eratype)_best_ids.csv", DataFrame)
 
     era_data = Dataset("../elevation_data/$(eratype)_aligned_elevations.nc")
     elev = era_data["elevation_m"][:]
