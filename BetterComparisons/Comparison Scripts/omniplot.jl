@@ -1,8 +1,11 @@
 using Plots, RecursiveArrayTools
 
-function omniplot(;
-    basedat,
-    landdat,
+"The data should be input in vectors in the order base land station"
+function omniplot(
+    xdata1,
+    ydata1,
+    xdata2,
+    ydata2;
     basin,
     figtitle,
     stat_swe_name,
@@ -19,32 +22,32 @@ function omniplot(;
 
     baselandstationcolors = [:blue :purple :orange]
 
+    xdata = badhcat(xdata1...; fill = first(first(xdata1)))
+    ydata = badhcat(ydata1...)
     p1 = plot(
-        basedat.datetime,
-        basedat.fom_diff_mean;
+        xdata,
+        ydata;
         title = "Fraction of 1991-2020 Median Difference",
         xlabel = "Year",
         ylabel = "FOM Diff (unitless)",
         legend = :none,
-        c=:blue
+        c=baselandstationcolors
     )
-    plot!(p1, landdat.datetime, landdat.fom_diff_mean, c=:purple)
-    plot!(p1, basedat.datetime, basedat[!, fom_climo_diff_name], c=:orange)
-    scatter!(p1, badhcat(basedat.datetime, landdat.datetime, basedat.datetime; fill=first(basedat.datetime)), 
-                 badhcat(basedat.fom_diff_mean, landdat.fom_diff_mean, basedat[!, fom_climo_diff_name]), label="", 
+    scatter!(p1, xdata, 
+                 ydata, label="", 
                  c=baselandstationcolors, ms=2)
+    
+    xdata = badhcat(xdata2...; fill = first(first(xdata2)))
+    ydata = badhcat(ydata2...)
     p2 = plot(
-        basedat.datetime,
-        basedat[!, era_swe_name];
-        label = "Base",
+        xdata,
+        ydata;
         title = "Fraction of Median",
         xlabel = "Year",
         ylabel = "Fraction of Median",
         legend = :none,
-        c=:blue
+        c=baselandstationcolors
     )
-    plot!(p2, landdat.datetime, landdat[!, era_swe_name]; label = "Land", c=:purple)
-    plot!(p2, basedat.datetime, basedat[!, stat_swe_name]; label = "Station", c=:orange)
     legendp2 = plot(
         0:0,
         (1:3)';
@@ -55,8 +58,8 @@ function omniplot(;
         yaxis = nothing,
         c=baselandstationcolors
     )
-    scatter!(p2, badhcat(basedat.datetime, landdat.datetime, basedat.datetime; fill=first(basedat.datetime)), 
-                 badhcat(basedat[!, era_swe_name], landdat[!, era_swe_name], basedat[!, stat_swe_name]), label="", 
+    scatter!(p2, xdata, 
+                 ydata, label="", 
                  c=baselandstationcolors, ms=2)
     legendp1 = plot(
         0:0,

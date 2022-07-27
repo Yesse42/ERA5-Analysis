@@ -10,7 +10,7 @@ function load_era(eradatadir, eratype, id)
     #Set to midnight for later joining
     times.datetime = Date.(times.datetime)
     #Convert to mm
-    data.sd .*= 1e3
+    data.sd = Float64.(ERA.meter_to_inch .* data.sd)
     eradata = rename!(hcat(times, data), [:datetime, :era_swe])
 
     #1979 is a cursed year, so throw it out

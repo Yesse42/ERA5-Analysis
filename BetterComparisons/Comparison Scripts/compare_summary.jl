@@ -1,9 +1,6 @@
-using CSV,
-    DataFrames, Dates, Dictionaries, AxisArrays, StatsBase, JLD2, Missings
+using CSV, DataFrames, Dates, Dictionaries, AxisArrays, StatsBase, JLD2, Missings
 burrowactivate()
 import ERA5Analysis as ERA, Base.Iterators as Itr
-
-myrmsd(x) = sqrt(sum(x_i^2 for x_i in x) / length(x))
 
 monthgroup(time) = round(time, Month(1), RoundDown)
 
@@ -16,6 +13,7 @@ function comparison_summary(
     groupfunc = monthgroup,
     median_group_func = month,
 )
+    data = dropmissing(data)
     comparecols = string.(comparecols)
     timecol = string(timecol)
 
@@ -48,7 +46,7 @@ function comparison_summary(
     )
     #Make a convenience function to get means and medians by month
     function getmonthstat(time, datasource; stat = anom_stat)
-        idx = findfirst(==(month(time)), monthstats[!, median_group_name])
+        idx = findfirst(==(median_group_func(time)), monthstats[!, median_group_name])
         if isnothing(idx)
             return missing
         end
@@ -61,54 +59,54 @@ function comparison_summary(
         ((x, t) -> (x - getmonthstat(t, col)) / getmonthstat(t, col; stat = "std")) for
         col in comparecols
     ]
-    fomfuncs = (((x, t) -> x / getmonthstat(t, col)) for col in comparecols)
+    fomfuncs = [((x, t) -> x / getmonthstat(t, col)) for col in comparecols]
     diffdata = transform(
         data,
         (comparecols_time .=> ByRow.(anomfuncs) .=> comparecols .* "_anom")...,
         (comparecols_time .=> ByRow.(fomfuncs) .=> comparecols .* "_fom")...,
         (comparecols_time .=> ByRow.(normedanomfuncs) .=> comparecols .* "_normed_anom")...,
     )
-    statistic_names = ["_anom", "_normed_anom", "_fom"]
-    statcols = permutedims(comparecols) .* statistic_names
-    transform!(
-        diffdata,
-        comparecols => ByRow(-) => :raw_diff,
-        comparecols .* "_anom" => ByRow(-) => :anomaly_diff,
-        comparecols .* "_normed_anom" => ByRow(-) => :normed_anomaly_diff,
-        comparecols .* "_fom" => ByRow(-) => :fom_diff,
-    )
-    #Now calculate the mean differences and rmsd by month, for all available times, not just 1991-2020
-    my2argstat(stat) = function f(x, y)
-        notmiss = (!).(ismissing.(x) .|| ismissing.(y))
-        if all((!).(notmiss))
-            return missing
-        else
-            return stat(x[notmiss], y[notmiss])
-        end
-    end
 
-    groupcolname = Symbol(groupfunc)
-    diffdata_withmonth = transform(diffdata, timecol => ByRow(groupfunc) => groupcolname)
-    group_diff = groupby(diffdata_withmonth, groupcolname)
-    groupcols = String.([:raw_diff, :anomaly_diff, :normed_anomaly_diff, :fom_diff])
-    month_diff_stats = combine(
-        group_diff,
-        comparecols => ((x, y) -> sum((!).(ismissing.(x) .|| ismissing.(y)))) => :n_obs,
-        comparecols .=> mystat(mean) .=> comparecols .* "_mean",
-        comparecols .=> mystat(median) .=> comparecols .* "_median",
-        statcols .=> mystat(mean) .=> statcols .* "_mean",
-        groupcols .=> mystat(mean) .=> groupcols .* "_mean",
-        groupcols .=> mystat(myrmsd) .=> groupcols .* "_rmsd",
-        comparecols => my2argstat(cor) => "corr",
-        collect.(eachrow(statcols)) .=> my2argstat(cor) .=> statistic_names .* "_corr",
-        comparecols .* "_fom" .=>
-            (x -> mystat(mean)(x .- 1)) .=> comparecols .* "_fom_climo_diff_mean",
-        comparecols .* "_fom" .=>
-            (x -> mystat(myrmsd)(x .- 1)) .=> comparecols .* "_fom_climo_diff_rmsd",
-        comparecols .* "_normed_anom" .=>
-            (x -> mystat(myrmsd)(x .- mystat(mean)(x))) .=>
-                comparecols .* "_normed_anom_climo_diff_rmsd",
+    #Now the second variable of comparecol should have all of its values (raw swe, anomaly, normed_anomaly)
+    #translated into percent of median USING THE FIRST VARIABLE'S median and standard deviation
+    #This is so all calculated RMSDs have the same units
+    raw_names = comparecols[2] .* ["", "_anom", "_normed_anom"]
+    raw_names_with_time = [[name, timecol] for name in raw_names]
+    transform_funcs = ByRow.([(x, t)->x/getmonthstat(t, comparecols[1]),
+    (x, t)->(x + getmonthstat(t, comparecols[1]))/getmonthstat(t, comparecols[1]),
+    (x, t)->(x * getmonthstat(t, comparecols[1]; stat="std") + getmonthstat(t, comparecols[1]))/getmonthstat(t, comparecols[1]),
+    ])
+    as_fom_names = raw_names .* "_as_col1_fom"
+    dropmissing!(diffdata)
+    transform!(diffdata, (raw_names_with_time.=>transform_funcs.=>as_fom_names)...)
+
+    #Now take the differences between the first datacol's percent of median and the
+    #second datacol's 4 different guesses of the first column's percent of median
+
+    col2_as_fom_names = [as_fom_names; comparecols[2].*"_fom"]
+    input_cols = [[comparecols[1].*"_fom"; col] for col in col2_as_fom_names]
+    stat_types = ["raw", "anom", "normed_anom", "fom"]
+    meandiffnames = stat_types .* "_diff_mean"
+    rmsdnames = stat_types .* "_rmsd"
+    corrnames = stat_types
+
+    #Now get correlations and RMSDs, and mean differences after grouping by month
+    newtimecol = Symbol(groupfunc)
+    with_groupcol = transform!(diffdata, timecol=>ByRow(groupfunc)=>newtimecol)
+    grouped_by_groupcol = groupby(with_groupcol, newtimecol)
+    mymean(x) = if isempty(x) return missing else return mean(x) end
+    myrmsd(x,y) = sqrt(mymean((a-b)^2 for (a,b) in zip(x,y)))
+    month_stats = combine(
+        grouped_by_groupcol,
+        comparecols .* "_fom" .=> mymean .=> comparecols .* "_fom_mean",
+        (input_cols .=> ((a,b)->mymean(Itr.map(-,a,b))) .=> meandiffnames)...,
+        (input_cols .=> myrmsd .=> rmsdnames)...,
+        (input_cols .=> StatsBase.Statistics.cor .=> corrnames)...,
+        #Also throw in the number of observations for weighting purposes
+        nrow=>:n_obs,
+        #Also throw in the RMSD for guessing the climatological median (fraction of median = 1) of the first column
+        comparecols[1] .* "_fom" => (x->myrmsd(x, Itr.repeated(1., length(x)))) => :climo_fom_rmsd
     )
 
-    return (ungrouped_data = diffdata, grouped_data = month_diff_stats)
+    return (ungrouped_data = diffdata, grouped_data = month_stats)
 end

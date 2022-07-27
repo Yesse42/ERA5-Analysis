@@ -24,7 +24,7 @@ if !isdefined(Main, :all_metadatas)
         sd = sd_data["sd"][:]
         replace!(sd, missing=>NaN32)
         elev_data = Dataset(
-            "$(ERA.ERA5DATA)/extracted_points/data/$(eratype)_aligned_elevations.nc",
+            "../elevation_data/$(eratype)_aligned_elevations.nc",
             "r",
         )
         elevations = elev_data["elevation_m"][:]

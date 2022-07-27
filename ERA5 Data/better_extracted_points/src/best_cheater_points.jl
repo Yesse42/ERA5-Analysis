@@ -10,7 +10,7 @@ const windowsize = CartesianIndex(15, 5)
 
 include(joinpath(ERA.SCRIPTPATH, "load_era_data.jl"))
 
-const network_metrics = [snotelmetric, coursemetric]
+network_metrics = Dictionary(ERA.networktypes,[snotelmetric, coursemetric])
 
 
 for eratype in ERA.eratypes
@@ -29,12 +29,12 @@ for eratype in ERA.eratypes
     writedir = "../cheater_data"
     CSV.write("$writedir/$(eratype)_best_ids.csv", outdf)
     for row in eachrow(outdf)
-        any(ismissing.(row)) && continue
+        any(ismissing.(collect(row))) && continue
         sd_at_loc = sd[row.lonidx, row.latidx, :]
         if all(ismissing.(collect(sd_at_loc)))
             println(row.id); continue
         end
         CSV.write(joinpath(writedir, "$(eratype)/$(row.id).csv"), DataFrame(; sd = sd_at_loc))
     end
-    CSV.write(joinpath(writedir, "$(eratype)/times.csv"), DataFrame(; datetime = times))
+    CSV.write(joinpath(writedir, "$(eratype)/times.csv"), DataFrame(; datetime = eratime))
 end

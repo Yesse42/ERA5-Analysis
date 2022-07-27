@@ -36,13 +36,13 @@ load_k_fold_func = let
     end
 end
 
-savedirs = "../vis/" .* ["standard", "plain_nn", "cheater", joinpath.("k-fold", ERA.foldtypes)...]
+savedirs = "../vis/" .* ["plain_nn", "cheater", joinpath.("k-fold", ERA.foldtypes)...]
 
 load_plain_nn(_, eratype, id) = load_era(joinpath(ERA.ERA5DATA, "better_extracted_points", "plain_nn"), eratype, id)
 
 load_cheater(_, eratype, id) = load_era(joinpath(ERA.ERA5DATA, "better_extracted_points", "cheater_data"), eratype, id)
 
-loadfuncs = [load_era, load_plain_nn, load_cheater, [load_k_fold_func(type) for type in ERA.foldtypes]...]
+loadfuncs = [load_plain_nn, load_cheater, [load_k_fold_func(type) for type in ERA.foldtypes]...]
 
 for (dir, func) in zip(savedirs, loadfuncs)
     mkpath(dir)

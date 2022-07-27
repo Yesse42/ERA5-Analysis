@@ -27,7 +27,7 @@ stationtype_ids = (basin_to_snotel, basin_to_snow_course)
 for (eratype, erafile) in zip(ERA.eratypes, ERA.erafiles)
     era_chosen_points = CSV.read("../cheater_data/$(eratype)_best_ids.csv", DataFrame)
 
-    era_data = Dataset("../../extracted_points/data/$(eratype)_aligned_elevations.nc")
+    era_data = Dataset("../elevation_data/$(eratype)_aligned_elevations.nc")
     elev = era_data["elevation_m"][:]
     lon = era_data["longitude"]
     lat = era_data["latitude"]

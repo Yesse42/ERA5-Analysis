@@ -13,12 +13,12 @@ eradatadir = joinpath(ERA.ERA5DATA, "extracted_points")
 "This function groups the two halves of the month the snow course measurements can occur in (e.g. end of march and start of april are grouped)"
 function shifted_month(date)
     #+18 days ensures that the 15th, 16th, and 17th get shifted into the next month
-    date = date + Day(18)
+    date = date + Day(16)
     return month(date)
 end
 function shifted_monthperiod(date)
-    shiftdate = date + Day(18)
-    return round(shiftdate, Month(1), RoundDown)
+    shiftdate = date + Day(16)
+    return round(shiftdate, Month(1), RoundDown) - Day(16)
 end
 
 function monthperiod(date)
@@ -33,7 +33,7 @@ function general_station_compare(
     comparecolnames,
     groupfunc = monthperiod,
     median_group_func = month,
-    timeperiod = (Date(0, 1, 1), Date(3000, 1, 1)),
+    timeperiod = (typemin(DateTime), typemax(DateTime)),
     timecol = "datetime",
     grouped_or_ungrouped = :grouped_data,
     n_obs_weighting = false,

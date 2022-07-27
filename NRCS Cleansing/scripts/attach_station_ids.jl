@@ -64,7 +64,8 @@ end
 timenames = filter!(str->occursin("datetime", str), course_ids)
 date_parse_cols = [[name, "Date"] for name in timenames]
 select!(snow_course, Not(timenames), 
-    date_parse_cols.=>ByRow(nasty_date_parser).=>timenames)
+    date_parse_cols.=>ByRow(nasty_date_parser).=>timenames,
+    :Date=>ByRow(x->parse(Date, x, dateformat"u YYYY"))=>:Date)
 
 for df in [snotel, snow_course]
     select!(df, :Date => :datetime, Not(:Date))

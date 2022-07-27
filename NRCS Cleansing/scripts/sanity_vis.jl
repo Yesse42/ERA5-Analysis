@@ -21,7 +21,7 @@ for network in ERA.networktypes
         transform!(
             stationdata,
             timename => ByRow(t -> Dates.round(t, Month(1), RoundDown)) => timename,
-            swename.=>(x ->x .* ERA.meters_to_inch .* 1e-3)=>swename
+            swename.=>(x ->x .* ERA.meter_to_inch .* 1e-3)=>swename
         )
         month_group = groupby(stationdata, timename)
         myskipmiss(x) =

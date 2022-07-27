@@ -16,7 +16,7 @@ load_k_fold_func = let
         stationtodata = jldopen(joinpath(kfolddatadir, foldtype, eratype, "eradata.jld2"))["station_to_data"]
         stationtodata = map(stationtodata) do datatup
             df = DataFrame(datatup;copycols = false)
-            select!(df, :time=>ByRow(Date)=>:datetime, :sd=>ByRow(x->x.*1e3)=>:era_swe)
+            select!(df, :time=>ByRow(Date)=>:datetime, :sd=>ByRow(x->x.*ERA.meter_to_inch)=>:era_swe)
             return sort!(df, :datetime)
         end
 
@@ -33,15 +33,17 @@ load_k_fold_func = let
     end
 end
 
-savedirs = "../vis/" .* ["standard", "plain_nn", "cheater", joinpath.("k-fold", ERA.foldtypes)...]
+savedirs = "../vis/" .* ["plain_nn", "cheater", joinpath.("k-fold", ERA.foldtypes)...]
 
 load_plain_nn(_, eratype, id) = load_era(joinpath(ERA.ERA5DATA, "better_extracted_points", "plain_nn"), eratype, id)
 
 load_cheater(_, eratype, id) = load_era(joinpath(ERA.ERA5DATA, "better_extracted_points", "cheater_data"), eratype, id)
 
-loadfuncs = [load_era, load_plain_nn, load_cheater, [load_k_fold_func(type) for type in ERA.foldtypes]...]
+loadfuncs = [load_plain_nn, load_cheater, [load_k_fold_func(type) for type in ERA.foldtypes]...]
 
 for (dir, func) in zip(savedirs, loadfuncs)
+    !occursin("nn", dir) && continue
     mkpath(dir)
-    land_vs_base_bar(;load_era_func = func, savedir = dir)
+    datavec = land_vs_base_datagen(;load_era_func = func, base_stat_name = :fom_rmsd, climo_stat_name = :climo_fom_rmsd)
+    error_bar_plot(datavec, dir)
 end

@@ -23,7 +23,7 @@ function basin_aggregate(datavec; timecol = :datetime, n_obs_weighting = false)
     n_obs = VectorOfArray([data[!, :n_obs] for data in revised_data])
 
     #Now apply a special aggfunction
-    na_or_miss(x) = ismissing(x) || isnan(x)
+    na_or_miss(x) = ismissing(x) || isnan(x) || isinf(x)
     meanfunc = if !n_obs_weighting
         skipmiss_mean(x, _) = begin
             if all(Itr.map(na_or_miss, x))
@@ -35,7 +35,7 @@ function basin_aggregate(datavec; timecol = :datetime, n_obs_weighting = false)
     else
         weighted_skipmiss_mean(x, weights) = begin
             ismiss = map(na_or_miss, x)
-            notmiss = (!).(ismiss)
+            notmiss = (!).(ismiss) .&& (!).(na_or_miss.(weights))
             if all(ismiss)
                 return NaN
             else

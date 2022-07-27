@@ -36,7 +36,7 @@ const usable_basins = [
     "Lower Yukon",
     "Lynn Canal",
 ]
-const meters_to_inch = 39.3701
+const meter_to_inch = 39.3701
 const mm_to_inch = 0.0393701
 
 const hucsizes = [6,8,10]
