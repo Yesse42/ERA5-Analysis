@@ -62,10 +62,10 @@ function land_vs_base_datagen(; basin_to_stations = def_basin_to_station,
     return collect((land_stat, climo_stat, base_stat))
 end
 
-function raw_anom_fom_comp_datagen(; eratype,
+function raw_anom_fom_comp_datagen(; load_era_func, eratype,
     basin_to_stations = def_basin_to_station,
     stats_to_extract = ["raw", "anom", "normed_anom", "fom"] .* "_rmsd",
-    station_compare_args = station_compare_args, time_to_pick = 4, T=Float64)
+    station_compare_args = station_compare_args, time_to_pick = 4, T=Union{Float64, Missing})
     datastore = [T[] for _ in 1:length(stats_to_extract)]
     for basin in ERA.usable_basins
 
@@ -73,6 +73,7 @@ function raw_anom_fom_comp_datagen(; eratype,
         basinmean = general_station_compare(
             eratype,
             courses;
+            load_era_func,
             station_compare_args...
         )
         
@@ -84,7 +85,7 @@ function raw_anom_fom_comp_datagen(; eratype,
             push!(datavec, only(basinmean[:, statname]))
         end
     end
-    return datavec
+    return datastore
 end
 
 "Default datavec should have land's data, then climo and then base"
@@ -107,8 +108,8 @@ function error_bar_plot(datavec, savedir; cvec = [:purple, :orange, :blue], xtic
     )
     bar!(
         p,
-        (1:3)',
-        [NaN, NaN, NaN]';
+        (1:length(labels))',
+        repeat([NaN], length(labels))';
         show_axis = false,
         label = permutedims(labels),
         fillcolor = permutedims(cvec),
