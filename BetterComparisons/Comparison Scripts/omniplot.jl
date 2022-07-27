@@ -69,7 +69,8 @@ function omniplot(
         label = ["Base vs Station" "Land vs Station" "Station vs Climatology"],
         xaxis = nothing,
         yaxis = nothing,
-        c=baselandstationcolors
+        c=baselandstationcolors,
+        legendfontsize = 5
     )
     bp = plot(
         p1,

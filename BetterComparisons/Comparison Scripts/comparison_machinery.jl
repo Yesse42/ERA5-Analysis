@@ -12,13 +12,11 @@ eradatadir = joinpath(ERA.ERA5DATA, "extracted_points")
 
 "This function groups the two halves of the month the snow course measurements can occur in (e.g. end of march and start of april are grouped)"
 function shifted_month(date)
-    #+18 days ensures that the 15th, 16th, and 17th get shifted into the next month
-    date = date + Day(16)
-    return month(date)
+    return month(round(date, Month(1), RoundNearestTiesUp))
 end
+"This means that the period from march 16th to april 14th will be rounded to April 1st"
 function shifted_monthperiod(date)
-    shiftdate = date + Day(16)
-    return round(shiftdate, Month(1), RoundDown) - Day(16)
+    return round(date, Month(1), RoundNearestTiesUp)
 end
 
 function monthperiod(date)
@@ -61,7 +59,6 @@ function general_station_compare(
         select!(analyzed_data, newtimecol => timecol, Not(newtimecol))
         push!(station_data, analyzed_data)
         push!(used_stations, id)
-        (id in kenai_stations && eratype=="Base") && set!(kenai_dict, id, analyzed_data)
     end
 
     basinmean = basin_aggregate(station_data; timecol = timecol, n_obs_weighting)

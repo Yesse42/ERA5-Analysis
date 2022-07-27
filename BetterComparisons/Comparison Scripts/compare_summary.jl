@@ -37,13 +37,12 @@ function comparison_summary(
         comparecols .=> std .=> comparecols .* "_std",
         comparecols .=> median .=> comparecols .* "_median",
     )
+    monthstatdict = Dict([(group, dsource, stat)=>
+    monthstats[findfirst(==(group), monthstats[!, median_group_name]), "$(dsource)_$stat"]
+    for group in monthstats[!, median_group_name], dsource in comparecols, stat in ["mean","std","median"]])
     #Make a convenience function to get means and medians by month
     function getmonthstat(time, datasource; stat = anom_stat)
-        idx = findfirst(==(median_group_func(time)), monthstats[!, median_group_name])
-        if isnothing(idx)
-            return missing
-        end
-        return monthstats[idx, "$(datasource)_$stat"]
+        return get(monthstatdict, (median_group_func(time), datasource, stat), missing)
     end
     #Now calculate the differences, differences in anomalies, and differences in percent of normal
     comparecols_time = [[comparecol; timecol] for comparecol in comparecols]
@@ -81,7 +80,7 @@ function comparison_summary(
     stat_types = ["raw", "anom", "normed_anom", "fom"]
     meandiffnames = stat_types .* "_diff_mean"
     rmsdnames = stat_types .* "_rmsd"
-    corrnames = stat_types
+    corrnames = stat_types .* "_corr"
 
     #Now get correlations and RMSDs, and mean differences after grouping by month
     newtimecol = Symbol(groupfunc)
@@ -98,7 +97,8 @@ function comparison_summary(
         #Also throw in the number of observations for weighting purposes
         nrow=>:n_obs,
         #Also throw in the RMSD for guessing the climatological median (fraction of median = 1) of the first column
-        comparecols[1] .* "_fom" => (x->myrmsd(x, Itr.repeated(1., length(x)))) => :climo_fom_rmsd
+        comparecols[1] .* "_fom" => (x->myrmsd(x, Itr.repeated(1., length(x)))) => :climo_fom_rmsd,
+        comparecols[1] .* "_fom" => (x->StatsBase.Statistics.cor(collect(x), repeat([1.], length(x)))) => :climo_fom_corr
     )
 
     return (ungrouped_data = diffdata, grouped_data = month_stats)

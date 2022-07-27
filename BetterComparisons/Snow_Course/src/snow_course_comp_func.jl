@@ -8,7 +8,9 @@ include(joinpath(ERA.COMPAREDIR, "Comparison Scripts", "omniplot.jl"))
 include(joinpath(ERA.COMPAREDIR, "Comparison Scripts", "comparison_machinery.jl"))
 
 function snow_course_comp_lineplot(;era_load_func, savedir,
-    diffsym = :fom_diff_mean, climodiffsym = :snow_course_swe_fom_mean)
+    diffsym = :fom_diff_mean, climodiffsym = :snow_course_swe_fom_mean,
+    era_swe_name = :era_swe_fom_mean, station_swe_name = :snow_course_swe_fom_mean,
+    timepick = 4)
     for basin in ERA.usable_basins
         eradata = DataFrame[]
 
@@ -29,20 +31,22 @@ function snow_course_comp_lineplot(;era_load_func, savedir,
                 eradatadir = joinpath(ERA.ERA5DATA, "extracted_points"),
                 n_obs_weighting = true
             )
+            set!(dict_that_sees_all, (basin, eratype), basinmean)
             push!(eradata, basinmean.basindata)
         end
 
         #Now plot the difference in percent of median and the anomaly difference on separate axes,
         #for both era5 land and base
         #Filter for end of march/beginning of april
-        eradata = [filter(x -> month(x.datetime) == 4, d) for d in eradata]
+        eradata = [filter(x -> month(x.datetime) == timepick, d) for d in eradata]
         basedat, landdat = eradata
         #Now get the percent of median and anomaly diff
+        any(isempty.(eradata)) && continue
         ⊙(df, sym) = df[!, sym]
         omniplot([basedat.datetime, landdat.datetime, basedat.datetime],
             [basedat⊙diffsym, landdat⊙diffsym, basedat⊙climodiffsym .- 1],
             [basedat.datetime, landdat.datetime, basedat.datetime],
-            [basedat⊙:era_swe_fom_mean, landdat⊙:era_swe_fom_mean, basedat⊙:snow_course_swe_fom_mean];
+            [basedat⊙era_swe_name, landdat⊙era_swe_name, basedat⊙station_swe_name];
             basin,
             figtitle = "ERA5 vs Snow Course ($basin) (Mar 16th - Apr 15th)",
             stat_swe_name = "snow_course_swe_fom_mean",
