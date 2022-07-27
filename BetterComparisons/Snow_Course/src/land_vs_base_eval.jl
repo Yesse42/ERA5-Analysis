@@ -41,12 +41,12 @@ load_cheater(_, eratype, id) = load_era(joinpath(ERA.ERA5DATA, "better_extracted
 
 loadfuncs = [load_plain_nn, load_cheater, [load_k_fold_func(type) for type in ERA.foldtypes]...]
 
-titles = ["Naive Nearest Neighbor", "Minimizing RMSD", "Minimizing RMSD K-Fold Validation"]
+titles = ["Naive Nearest Neighbor", "Minimizing RMSD", "Minimizing RMSD K-Fold Validation (Every 3rd year)", "Minimizing RMSD K-Fold Validation (3 Chunks)"]
 
 for (dir, func, title) in zip(savedirs, loadfuncs, titles)
     mkpath(dir)
     datavec = land_vs_base_datagen(;load_era_func = func, base_stat_name = :fom_rmsd, climo_stat_name = :climo_fom_rmsd,
     time_to_pick=4)
-    style_kwargs = (;title="Naive Nearest Neighbor", ylabel = "Fraction of Median RMSD", xlabel = "year", margin = 5Plots.mm)
+    style_kwargs = (;title=title, ylabel = "Fraction of Median RMSD", xlabel = "year", margin = 5Plots.mm)
     error_bar_plot(datavec, dir; style_kwargs)
 end
