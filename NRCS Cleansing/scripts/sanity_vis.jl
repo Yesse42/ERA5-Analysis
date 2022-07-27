@@ -6,45 +6,22 @@ import ERA5Analysis as ERA
 #We just want to plot every SNOTEL's monthly min, mean, and max and all avilable Snow Course observations to ensure
 #that nothing fishy is going on
 all_metadata = CSV.read("../data/cleansed/Metadata.csv", DataFrame)
+include.(joinpath.(ERA.COMPAREDIR, "Load Scripts", ("load_snow_course.jl", "load_snotel.jl")))
 
-for network in ERA.networktypes
+for (network, loadfunc, label) in zip(ERA.networktypes, (load_snotel, load_snow_course), (:snotel_swe, :snow_course_swe))
+    basin_to_stations = jldopen("../data/cleansed/$(network)_basin_to_id.jld2")["basin_to_id"]
     data = CSV.read("../data/cleansed/$(network)_Data.csv", DataFrame)
-    metadata = filter(x->x.Network == network, all_metadata)
-    for row in eachrow(metadata)
-        station = string(row.ID)
-        timename = if network == "SNOTEL" "datetime" else "datetime_$station" end
-        swename = "SWE_$station"
-        stationdata = data[:, [timename, swename]]
-        dropmissing!(stationdata)
-
-        #Now groupby month
-        transform!(
-            stationdata,
-            timename => ByRow(t -> Dates.round(t, Month(1), RoundDown)) => timename,
-            swename.=>(x ->x .* ERA.meter_to_inch .* 1e-3)=>swename
-        )
-        month_group = groupby(stationdata, timename)
-        myskipmiss(x) =
-            if all(ismissing.(x))
-                return [missing]
-            else
-                return skipmissing(x)
-            end
-        stat_funcs = (minimum, mean, maximum) .∘ myskipmiss
-        monthly_stats =
-            combine(month_group, (swename .=> stat_funcs .=> ["min", "mean", "max"])...)
-        dropmissing!(monthly_stats)
-
-        #And now plot
-        myplot = plot(
-            monthly_stats[!, timename],
-            Array(monthly_stats[:, Not(timename)]);
-            title = "$(row.Name) in $(row.County), ID: $(row.ID)",
-            ylabel = "SWE (in)",
-            xlabel = "Date",
-            label = ["min" "mean" "max"],
-            legend = :topleft,
-        )
-        save("../vis/$network/$(row.ID).png", myplot)
+    for basin in ERA.basin_names
+        allowed_ids = basin_to_stations[basin]
+        isempty(allowed_ids) && continue
+        metadata = filter(x->string(x.ID) in allowed_ids, all_metadata)
+        dfs = loadfunc.(allowed_ids)
+        dropmissing!.(dfs)
+        p=plot(; title="$basin $network", legend = :outertopleft)
+        for (df, id) in zip(dfs, allowed_ids)
+            plot!(p, df.datetime, df[!, label]; label = id)
+        end
+        
+        savefig(p, "../vis/$network/$basin.png")
     end
 end

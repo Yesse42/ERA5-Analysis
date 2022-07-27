@@ -42,8 +42,8 @@ load_cheater(_, eratype, id) = load_era(joinpath(ERA.ERA5DATA, "better_extracted
 loadfuncs = [load_plain_nn, load_cheater, [load_k_fold_func(type) for type in ERA.foldtypes]...]
 
 for (dir, func) in zip(savedirs, loadfuncs)
-    !occursin("nn", dir) && continue
     mkpath(dir)
-    datavec = land_vs_base_datagen(;load_era_func = func, base_stat_name = :fom_rmsd, climo_stat_name = :climo_fom_rmsd)
+    datavec = land_vs_base_datagen(;load_era_func = func, base_stat_name = :fom_rmsd, climo_stat_name = :climo_fom_rmsd,
+    time_to_pick=2)
     error_bar_plot(datavec, dir)
 end

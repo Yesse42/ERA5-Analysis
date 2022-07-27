@@ -20,7 +20,7 @@ station_compare_args = pairs((;load_data_func = load_snow_course,
 
 function land_vs_base_datagen(; basin_to_stations = def_basin_to_station,
     base_stat_name, land_stat_name = base_stat_name, climo_stat_name,
-    station_compare_args = station_compare_args, time_to_pick = 4,
+    station_compare_args = station_compare_args, time_to_pick = 3, 
     load_era_func)
     land_stat = Float64[]
     base_stat = Float64[]
@@ -47,6 +47,10 @@ function land_vs_base_datagen(; basin_to_stations = def_basin_to_station,
         #for both era5 land and base
         #Filter for the time to pick
         eradata = [filter(x -> x.datetime == time_to_pick, d) for d in eradata]
+        if any(isempty.(eradata))
+            push!.((land_stat, base_stat, climo_stat), NaN)
+            continue
+        end
         #Now get the percent of median and anomaly diff
         ..(df, sym) = df[!, sym]
         push!(land_stat, only(eradata[2]..land_stat_name))

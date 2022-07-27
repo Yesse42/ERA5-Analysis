@@ -49,8 +49,8 @@ for stat in basin_to_courses[basin]
     #And now get the rmsd
     rmsd_data = combine(group_shiftmonth, fomcols=>StatsBase.rmsd=>:rmsd, nrow=>:n_obs)
 
-    #And push just the 4th time to the basin mean
-    filter!(x->x.shiftmonth == 4,rmsd_data)
+    #And push just the 3th time to the basin mean
+    filter!(x->x.shiftmonth == 3,rmsd_data)
     if isempty(rmsd_data) continue end
     insert!(outdict, stat, (rmsd = only(rmsd_data[:, :rmsd]), n_obs = only(rmsd_data[:, :n_obs])))
 
@@ -62,7 +62,7 @@ for stat in basin_to_courses[basin]
         groupfunc = shifted_month,
         median_group_func = shifted_month,
     ).grouped_data
-    month_idx = findfirst(==(4), comp_sum_data.shifted_month)
+    month_idx = findfirst(==(3), comp_sum_data.shifted_month)
     era_rmsd = comp_sum_data[month_idx, :fom_rmsd]
     era_nobs = comp_sum_data[month_idx, :n_obs]
     insert!(outera, stat, (rmsd = era_rmsd, n_obs = era_nobs))

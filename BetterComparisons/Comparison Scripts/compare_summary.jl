@@ -10,8 +10,8 @@ function comparison_summary(
     timecol;
     normal_times = (1991, 2020),
     anom_stat = "median",
-    groupfunc = monthgroup,
-    median_group_func = month,
+    groupfunc,
+    median_group_func,
 )
     data = dropmissing(data)
     comparecols = string.(comparecols)
@@ -30,19 +30,12 @@ function comparison_summary(
         return missing
     end
     groupmonth = groupby(withmonth, median_group_name)
-
-    mystat(stat) = f(x) =
-        if all(Itr.map(ismissing, x))
-            return missing
-        else
-            return stat(filter(!ismissing, x))
-        end
     #Now get mean and median values
     monthstats = combine(
         groupmonth,
-        comparecols .=> mystat(mean) .=> comparecols .* "_mean",
-        comparecols .=> mystat(std) .=> comparecols .* "_std",
-        comparecols .=> mystat(median) .=> comparecols .* "_median",
+        comparecols .=> mean .=> comparecols .* "_mean",
+        comparecols .=> std .=> comparecols .* "_std",
+        comparecols .=> median .=> comparecols .* "_median",
     )
     #Make a convenience function to get means and medians by month
     function getmonthstat(time, datasource; stat = anom_stat)
@@ -94,12 +87,12 @@ function comparison_summary(
     newtimecol = Symbol(groupfunc)
     with_groupcol = transform!(diffdata, timecol=>ByRow(groupfunc)=>newtimecol)
     grouped_by_groupcol = groupby(with_groupcol, newtimecol)
-    mymean(x) = if isempty(x) return missing else return mean(x) end
-    myrmsd(x,y) = sqrt(mymean((a-b)^2 for (a,b) in zip(x,y)))
+    # mymean(x) = if isempty(x) return missing else return mean(x) end
+    myrmsd(x,y) = sqrt(mean((a-b)^2 for (a,b) in zip(x,y)))
     month_stats = combine(
         grouped_by_groupcol,
-        comparecols .* "_fom" .=> mymean .=> comparecols .* "_fom_mean",
-        (input_cols .=> ((a,b)->mymean(Itr.map(-,a,b))) .=> meandiffnames)...,
+        comparecols .* "_fom" .=> mean .=> comparecols .* "_fom_mean",
+        (input_cols .=> ((a,b)->mean(Itr.map(-,a,b))) .=> meandiffnames)...,
         (input_cols .=> myrmsd .=> rmsdnames)...,
         (input_cols .=> StatsBase.Statistics.cor .=> corrnames)...,
         #Also throw in the number of observations for weighting purposes

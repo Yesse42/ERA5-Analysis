@@ -11,6 +11,7 @@ load_snow_course = let
         cols[2] ∉ courses && return missing
         outdata = rename(snow_course_data[:, cols], ["datetime", "snow_course_swe"])
         outdata = dropmissing(outdata)
+        sort!(outdata, :datetime)
         return transform!(outdata, :datetime => ByRow(Date) => :datetime, :snow_course_swe=>ByRow(passmissing(x->(Float64(x * ERA.mm_to_inch))))=>:snow_course_swe)
     end
 end

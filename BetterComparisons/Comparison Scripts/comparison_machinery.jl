@@ -29,10 +29,10 @@ function general_station_compare(
     eratype,
     stations;
     load_data_func,
-    load_era_func = load_era,
+    load_era_func,
     comparecolnames,
-    groupfunc = monthperiod,
-    median_group_func = month,
+    groupfunc,
+    median_group_func,
     timeperiod = (typemin(DateTime), typemax(DateTime)),
     timecol = "datetime",
     grouped_or_ungrouped = :grouped_data,
@@ -61,6 +61,7 @@ function general_station_compare(
         select!(analyzed_data, newtimecol => timecol, Not(newtimecol))
         push!(station_data, analyzed_data)
         push!(used_stations, id)
+        (id in kenai_stations && eratype=="Base") && set!(kenai_dict, id, analyzed_data)
     end
 
     basinmean = basin_aggregate(station_data; timecol = timecol, n_obs_weighting)
