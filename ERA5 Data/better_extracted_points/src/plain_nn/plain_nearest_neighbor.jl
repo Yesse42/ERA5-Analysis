@@ -3,8 +3,8 @@ burrowactivate()
 using CSV, DataFrames, Dates, NCDatasets, NearestNeighbors, Dictionaries, Distances, StaticArrays, JLD2
 import ERA5Analysis as ERA
 
-include("metric_defs.jl")
-include("find_most_representative_point.jl")
+include("../metric_defs.jl")
+include("../find_most_representative_point.jl")
 
 const windowsize = CartesianIndex(9,3)
 
@@ -17,7 +17,7 @@ end
 
 include(joinpath(ERA.SCRIPTPATH, "load_era_data.jl"))
 
-savedir = "../plain_nn"
+savedir = "../../plain_nn"
 
 function plain_distance(;kwargs...) 
     #Check that this isn't on the sea or glacier

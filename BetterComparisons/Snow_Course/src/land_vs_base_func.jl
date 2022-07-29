@@ -90,7 +90,7 @@ end
 
 "Default datavec should have land's data, then climo and then base"
 function error_bar_plot(datavec, savedir; cvec = [:purple, :orange, :blue], xticklabels = ERA.usable_basins, 
-    style_kwargs = (;), labels = ["ERA5 Land","Station Climatology","ERA5 Base"],
+    style_kwargs = (;), labels = ["ERA5 Land","Station Median","ERA5 Base"],
     plotname = "basin_summary.png", legend = :topleft, rotation=20, dpi = 300, ylim = (0,1))
     omnidata = reduce(vcat, permutedims.(datavec))
     xvals = reshape(collect(eachindex(omnidata)), size(omnidata)) .+ (1:size(omnidata, 2))'

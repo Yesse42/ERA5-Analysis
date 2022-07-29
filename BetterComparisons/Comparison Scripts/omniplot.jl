@@ -66,7 +66,7 @@ function omniplot(
         (1:3)';
         grid = false,
         showaxis = :hide,
-        label = ["Base vs Station" "Land vs Station" "Station vs Climatology"],
+        label = ["Base vs Station" "Land vs Station" "Station vs Median"],
         xaxis = nothing,
         yaxis = nothing,
         c=baselandstationcolors,

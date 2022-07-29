@@ -5,8 +5,8 @@ import ERA5Analysis as ERA
 
 const windowsize = CartesianIndex(6, 2)
 
-include("metric_defs.jl")
-include("find_most_representative_point.jl")
+include("../metric_defs.jl")
+include("../find_most_representative_point.jl")
 
 include(joinpath(ERA.SCRIPTPATH, "load_era_data.jl"))
 
@@ -53,7 +53,7 @@ broadcast_not(func) = g(x...; y...) = (!).(func(x...; y...))
 
 const n_folds = 3
 
-const savearea = "../k-fold_data/"
+const savearea = "../../k-fold_data/"
 
 for eratype in ERA.eratypes
 

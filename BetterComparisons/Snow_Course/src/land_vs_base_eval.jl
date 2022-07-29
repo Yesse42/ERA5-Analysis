@@ -41,7 +41,7 @@ load_cheater(_, eratype, id) = load_era(joinpath(ERA.ERA5DATA, "better_extracted
 
 loadfuncs = [load_plain_nn, load_cheater, [load_k_fold_func(type) for type in ERA.foldtypes]...]
 
-titles = ["Naive Nearest Neighbor", "Minimizing RMSD", "Minimizing RMSD K-Fold Validation (Every 3rd year)", "Minimizing RMSD K-Fold Validation (3 Chunks)"]
+titles = ["Naive Nearest Neighbor, Error Predicting Station Obs", "Minimizing RMSD", "Minimizing RMSD K-Fold Validation (Every 3rd year)", "Minimizing RMSD K-Fold Validation (3 Chunks)"]
 
 for (dir, func, title) in zip(savedirs, loadfuncs, titles)
     mkpath(dir)

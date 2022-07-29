@@ -3,8 +3,8 @@ burrowactivate()
 using CSV, DataFrames, Dates, NCDatasets, NearestNeighbors, Dictionaries, Distances, StaticArrays, JLD2
 import ERA5Analysis as ERA
 
-include("metric_defs.jl")
-include("find_most_representative_point.jl")
+include("../metric_defs.jl")
+include("../find_most_representative_point.jl")
 
 const windowsize = CartesianIndex(15, 5)
 
@@ -26,7 +26,7 @@ for eratype in ERA.eratypes
     mycollect(x) = if ismissing(x) return (missing, missing) else collect(x) end
     select!(outdf, :id, :best=>ByRow(mycollect)=>[:lonidx, :latidx])
 
-    writedir = "../cheater_data"
+    writedir = "../../cheater_data"
     CSV.write("$writedir/$(eratype)_best_ids.csv", outdf)
     for row in eachrow(outdf)
         any(ismissing.(collect(row))) && continue

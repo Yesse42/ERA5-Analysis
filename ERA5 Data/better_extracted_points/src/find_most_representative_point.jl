@@ -5,8 +5,8 @@ include.(joinpath.(ERA.COMPAREDIR, "Load Scripts", "load_".*["snow_course","snot
 """
 The specification of the metric function is important. It is passed many keyword args,
 with eratype, stationmetadata, glacierbool, eralonlat, eraelevation, eravals, stationvals, and times as fields.
-It should return some type which can be sorted with the less than func, with smaller values better;
-the default lt is Base.isless.
+It should return some type which can be sorted with sort, and the index of the best value is returned
+along with the value and index of all points which were considered.
 """
 function era_best_neighbor(;
     eratype,
@@ -19,7 +19,6 @@ function era_best_neighbor(;
     stationmetadata,
     searchwindow,
     metric_func,
-    lt = isless,
 )
 
     station_loc = SVector(stationmetadata.Longitude, stationmetadata.Latitude)
@@ -32,7 +31,6 @@ function era_best_neighbor(;
 
     used_ids = CartesianIndex{2}[]
     neighbor_scores = nothing
-    conjoined_time = nothing
     #Now loop through the search window, evaluating the metric at each point and storing the value
     for I in max(nn_id-searchwindow, CartesianIndex(1,1)):min(nn_id+searchwindow, CartesianIndex(size(lonlatgrid)))
         push!(used_ids, I)
