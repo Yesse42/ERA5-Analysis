@@ -14,6 +14,8 @@ function metric(;eratype, stationmetadata, glacierbool, eralonlat,
     return @views deviationfunc(times[t_mask], eravals[t_mask], stationvals[t_mask])
 end
 
+myrmsd(x,y) = sqrt(mean((a-b)^2 for (a,b) in zip(x,y)))
+
 function pom_rmsd(time, era, stat; median_groupfunc)
     isempty(time) && return Inf
     #First calculate the medians by grouping by median_groupfunc
@@ -28,7 +30,7 @@ function pom_rmsd(time, era, stat; median_groupfunc)
     end
     datacols_time = [[col, :time] for col in datacols]
     poms = select(data, (datacols_time.=>ByRow.(pom.(datacols)).=>datacols)...)
-    return StatsBase.rmsd(poms.stat, poms.era)
+    return myrmsd(poms.stat, poms.era)
 end
 
 march_func(time) = month.(time) .== 3
