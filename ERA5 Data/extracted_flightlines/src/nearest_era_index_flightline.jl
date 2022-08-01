@@ -16,8 +16,9 @@ import ERA5Analysis as ERA
 function isglacier(era_sd; glacier_thresh = 0.95, snow_thresh = 1e-3)
     era_sd[ismissing.(era_sd)] .= NaN
 
-    return ((sum(era_sd .> snow_thresh; dims = 3) ./ size(era_sd, 3)) .>= glacier_thresh) .||
-           isnan.(era_sd[:, :, 1])
+    return (
+        (sum(era_sd .> snow_thresh; dims = 3) ./ size(era_sd, 3)) .>= glacier_thresh
+    ) .|| isnan.(era_sd[:, :, 1])
 end
 
 #First get a list of Alaska flightlines with data

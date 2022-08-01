@@ -18,7 +18,9 @@ for sd in sds
     sd[ismissing.(sd)] .= NaN
 end
 function isglacier(sd_arr; glacier_thresh = 0.95, snow_thresh = 1e-3)
-    return glacier_mask = (sum(sd_arr .> snow_thresh; dims = 3) ./ size(sd_arr, 3)) .>= glacier_thresh .|| isnan.(sd_arr[:,:,1])
+    return glacier_mask =
+        (sum(sd_arr .> snow_thresh; dims = 3) ./ size(sd_arr, 3)) .>= glacier_thresh .||
+        isnan.(sd_arr[:, :, 1])
 end
 glacierarrs = Dictionary(eratypes, isglacier.(sds))
 #Set missing areas to show as glacier so they are excluded as well

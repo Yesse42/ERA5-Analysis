@@ -17,6 +17,6 @@ plot(data.datetime, data.era_swe_fom_mean)
 stationdata = alldata.stationdata
 
 print("\n\n\n\n here \n\n\n\n")
-reagged = basin_aggregate(collect(stationdata); n_obs_weighting=true)
+reagged = basin_aggregate(collect(stationdata); n_obs_weighting = true)
 display(reagged[:, r"(era_swe|time)"])
 display(plot!(reagged.datetime, reagged.era_swe_fom_mean))

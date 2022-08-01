@@ -8,34 +8,39 @@ include(joinpath(ERA.COMPAREDIR, "Comparison Scripts", "omniplot.jl"))
 include(joinpath(ERA.COMPAREDIR, "Comparison Scripts", "comparison_machinery.jl"))
 
 def_basin_to_station =
-jldopen(joinpath(ERA.NRCSDATA, "cleansed", "Snow_Course_basin_to_id.jld2"))["basin_to_id"]
+    jldopen(joinpath(ERA.NRCSDATA, "cleansed", "Snow_Course_basin_to_id.jld2"))["basin_to_id"]
 
-station_compare_args = pairs((;load_data_func = load_snow_course,
-                                comparecolnames = [:snow_course_swe, :era_swe],
-                                timecol = "datetime",
-                                groupfunc = shifted_month,
-                                median_group_func = shifted_month,
-                                n_obs_weighting = true,
-                                eradatadir = joinpath(ERA.ERA5DATA, "extracted_points")))
+station_compare_args = pairs((;
+    load_data_func = load_snow_course,
+    comparecolnames = [:snow_course_swe, :era_swe],
+    timecol = "datetime",
+    groupfunc = shifted_month,
+    median_group_func = shifted_month,
+    n_obs_weighting = true,
+    eradatadir = joinpath(ERA.ERA5DATA, "extracted_points"),
+))
 
-function land_vs_base_datagen(; basin_to_stations = def_basin_to_station,
-    base_stat_name, land_stat_name = base_stat_name, climo_stat_name,
-    station_compare_args = station_compare_args, time_to_pick = 3, 
-    load_era_func)
+function land_vs_base_datagen(;
+    basin_to_stations = def_basin_to_station,
+    base_stat_name,
+    land_stat_name = base_stat_name,
+    climo_stat_name,
+    station_compare_args = station_compare_args,
+    time_to_pick = 3,
+    load_era_func,
+)
     land_stat = Float64[]
     base_stat = Float64[]
     climo_stat = Float64[]
     for basin in ERA.usable_basins
         eradata = DataFrame[]
         for eratype in ERA.eratypes
-            
-
             courses = basin_to_stations[basin]
             basinmean = general_station_compare(
                 eratype,
                 courses;
                 load_era_func,
-                station_compare_args...
+                station_compare_args...,
             )
             ismissing(basinmean) && break
             push!(eradata, basinmean.basindata)
@@ -53,30 +58,34 @@ function land_vs_base_datagen(; basin_to_stations = def_basin_to_station,
         end
         #Now get the percent of median and anomaly diff
         ..(df, sym) = df[!, sym]
-        push!(land_stat, only(eradata[2]..land_stat_name))
-        push!(base_stat, only(eradata[1]..base_stat_name))
-        push!(climo_stat, only(eradata[1]..climo_stat_name))
+        push!(land_stat, only(eradata[2] .. land_stat_name))
+        push!(base_stat, only(eradata[1] .. base_stat_name))
+        push!(climo_stat, only(eradata[1] .. climo_stat_name))
     end
 
     #Now return a vector of the vectors
     return collect((land_stat, climo_stat, base_stat))
 end
 
-function raw_anom_fom_comp_datagen(; load_era_func, eratype,
+function raw_anom_fom_comp_datagen(;
+    load_era_func,
+    eratype,
     basin_to_stations = def_basin_to_station,
     stats_to_extract = ["raw", "anom", "normed_anom", "fom"] .* "_rmsd",
-    station_compare_args = station_compare_args, time_to_pick = 4, T=Union{Float64, Missing})
+    station_compare_args = station_compare_args,
+    time_to_pick = 4,
+    T = Union{Float64, Missing},
+)
     datastore = [T[] for _ in 1:length(stats_to_extract)]
     for basin in ERA.usable_basins
-
         courses = basin_to_stations[basin]
         basinmean = general_station_compare(
             eratype,
             courses;
             load_era_func,
-            station_compare_args...
+            station_compare_args...,
         )
-        
+
         ismissing(basinmean) && continue
 
         basinmean = filter(x -> x.datetime == time_to_pick, basinmean.basindata)
@@ -89,9 +98,19 @@ function raw_anom_fom_comp_datagen(; load_era_func, eratype,
 end
 
 "Default datavec should have land's data, then climo and then base"
-function error_bar_plot(datavec, savedir; cvec = [:purple, :orange, :blue], xticklabels = ERA.usable_basins, 
-    style_kwargs = (;), labels = ["ERA5 Land","Station Median","ERA5 Base"],
-    plotname = "basin_summary.png", legend = :topleft, rotation=20, dpi = 300, ylim = (0,1))
+function error_bar_plot(
+    datavec,
+    savedir;
+    cvec = [:purple, :orange, :blue],
+    xticklabels = ERA.usable_basins,
+    style_kwargs = (;),
+    labels = ["ERA5 Land", "Station Median", "ERA5 Base"],
+    plotname = "basin_summary.png",
+    legend = :topleft,
+    rotation = 20,
+    dpi = 300,
+    ylim = (0, 1),
+)
     omnidata = reduce(vcat, permutedims.(datavec))
     xvals = reshape(collect(eachindex(omnidata)), size(omnidata)) .+ (1:size(omnidata, 2))'
     fillcolors = reduce(hcat, (cvec for i in Base.axes(omnidata, 2)))
@@ -103,8 +122,11 @@ function error_bar_plot(datavec, savedir; cvec = [:purple, :orange, :blue], xtic
         fillcolor = vec(fillcolors),
         label = "",
         xticks = (xticks, xticklabels),
-        legend, rotation, dpi, ylim,
-        style_kwargs...
+        legend,
+        rotation,
+        dpi,
+        ylim,
+        style_kwargs...,
     )
     bar!(
         p,
@@ -115,5 +137,5 @@ function error_bar_plot(datavec, savedir; cvec = [:purple, :orange, :blue], xtic
         fillcolor = permutedims(cvec),
     )
 
-    savefig(p, joinpath(savedir, plotname))
+    return savefig(p, joinpath(savedir, plotname))
 end

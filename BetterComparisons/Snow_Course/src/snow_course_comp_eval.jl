@@ -10,16 +10,20 @@ include("land_vs_base_func.jl")
 include(joinpath(ERA.COMPAREDIR, "Load Scripts", "load_era.jl"))
 
 load_k_fold_func = let
-
-    kfolddatadir = joinpath(ERA.ERA5DATA, "better_extracted_points","k-fold_data")
+    kfolddatadir = joinpath(ERA.ERA5DATA, "better_extracted_points", "k-fold_data")
 
     #Useful preloading
     datadict = nothing
     for foldtype in ERA.foldtypes, eratype in ERA.eratypes
-        stationtodata = jldopen(joinpath(kfolddatadir, foldtype, eratype, "eradata.jld2"))["station_to_data"]
+        stationtodata =
+            jldopen(joinpath(kfolddatadir, foldtype, eratype, "eradata.jld2"))["station_to_data"]
         stationtodata = map(stationtodata) do datatup
-            df = DataFrame(datatup;copycols = false)
-            select!(df, :time=>ByRow(Date)=>:datetime, :sd=>ByRow(x->x.*1e3)=>:era_swe)
+            df = DataFrame(datatup; copycols = false)
+            select!(
+                df,
+                :time => ByRow(Date) => :datetime,
+                :sd => ByRow(x -> x .* 1e3) => :era_swe,
+            )
             return sort!(df, :datetime)
         end
 
@@ -30,7 +34,7 @@ load_k_fold_func = let
         end
     end
 
-    load_k_fold_func(foldtype) = function load_era_k_fold(_,eratype,id)
+    load_k_fold_func(foldtype) = function load_era_k_fold(_, eratype, id)
         stationtodata = datadict[(foldtype, eratype)]
         return get(stationtodata, string(id), missing)
     end
@@ -38,17 +42,26 @@ end
 
 savedirs = "../vis/" .* ["plain_nn", "cheater", joinpath.("k-fold", ERA.foldtypes)...]
 
-load_plain_nn(_, eratype, id) = load_era(joinpath(ERA.ERA5DATA, "better_extracted_points", "plain_nn"), eratype, id)
+load_plain_nn(_, eratype, id) =
+    load_era(joinpath(ERA.ERA5DATA, "better_extracted_points", "plain_nn"), eratype, id)
 
-load_cheater(_, eratype, id) = load_era(joinpath(ERA.ERA5DATA, "better_extracted_points", "cheater_data"), eratype, id)
+load_cheater(_, eratype, id) =
+    load_era(joinpath(ERA.ERA5DATA, "better_extracted_points", "cheater_data"), eratype, id)
 
-loadfuncs = [load_plain_nn, load_cheater, [load_k_fold_func(type) for type in ERA.foldtypes]...]
+loadfuncs =
+    [load_plain_nn, load_cheater, [load_k_fold_func(type) for type in ERA.foldtypes]...]
 
 for (dir, func) in zip(savedirs, loadfuncs)
     mkpath(dir)
-    omni_args = (;stat_swe_name = "snow_course_swe_fom_mean",
-    era_swe_name = "era_swe_fom_mean",
-    fom_climo_diff_name = "snow_course_swe_fom_climo_diff_mean",
-    savedir = dir)
-    snow_course_comp_lineplot(;era_load_func = func, savedir = dir, omniplot_args = omni_args)
+    omni_args = (;
+        stat_swe_name = "snow_course_swe_fom_mean",
+        era_swe_name = "era_swe_fom_mean",
+        fom_climo_diff_name = "snow_course_swe_fom_climo_diff_mean",
+        savedir = dir,
+    )
+    snow_course_comp_lineplot(;
+        era_load_func = func,
+        savedir = dir,
+        omniplot_args = omni_args,
+    )
 end

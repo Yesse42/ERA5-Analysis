@@ -29,12 +29,12 @@ function extract_colname(colname)
     colname == "Date" && return colname
     id = match(r"(?:\()([0-9]+[A-Z]*[0-9]+)", colname)
     id = only(id.captures)
-    dtype = 
-    if occursin("Snow Water Equivalent Collection Date Start of Month Values", colname)
-        "datetime"
-    elseif occursin("Snow Water Equivalent (mm)", colname)
-        "SWE"
-    end
+    dtype =
+        if occursin("Snow Water Equivalent Collection Date Start of Month Values", colname)
+            "datetime"
+        elseif occursin("Snow Water Equivalent (mm)", colname)
+            "SWE"
+        end
     return "$(dtype)_$(id)"
 end
 course_ids = extract_colname.(names(snow_course))
@@ -46,7 +46,7 @@ snotel_ids = snotel_ids[2:end]
 
 "They give a Date column of 'Apr 1958' and a collection date formatted like 'Apr 28'"
 function nasty_date_parser(monthday, monthyear)
-    (ismissing(monthday) || monthday == "\t")&& return missing
+    (ismissing(monthday) || monthday == "\t") && return missing
     str_to_month = Dates.LOCALES["english"].month_abbr_value
     numregex = r"[0-9]+"
     year = parse(Int, match(numregex, monthyear).match)
@@ -61,11 +61,14 @@ function nasty_date_parser(monthday, monthyear)
 end
 
 #Now handle the atrocious date formatting
-timenames = filter!(str->occursin("datetime", str), course_ids)
+timenames = filter!(str -> occursin("datetime", str), course_ids)
 date_parse_cols = [[name, "Date"] for name in timenames]
-select!(snow_course, Not(timenames), 
-    date_parse_cols.=>ByRow(nasty_date_parser).=>timenames,
-    :Date=>ByRow(x->parse(Date, x, dateformat"u YYYY"))=>:Date)
+select!(
+    snow_course,
+    Not(timenames),
+    date_parse_cols .=> ByRow(nasty_date_parser) .=> timenames,
+    :Date => ByRow(x -> parse(Date, x, dateformat"u YYYY")) => :Date,
+)
 
 for df in [snotel, snow_course]
     select!(df, :Date => :datetime, Not(:Date))
@@ -74,7 +77,7 @@ for df in [snotel, snow_course]
     select!(df, names(df)[notallmissing_col])
 end
 
-filter!(row->any(occursin.(row.ID, [names(snow_course); names(snotel)])), metadata)
+filter!(row -> any(occursin.(row.ID, [names(snow_course); names(snotel)])), metadata)
 
 #Now save the new stuff
 CSV.write(joinpath(outdir, "Metadata.csv"), metadata)

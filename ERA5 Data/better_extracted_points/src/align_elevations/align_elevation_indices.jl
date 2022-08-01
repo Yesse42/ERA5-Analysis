@@ -7,8 +7,10 @@ import ERA5Analysis as ERA
 
 offestarr = []
 for (era_type, era_file) in zip(ERA.eratypes, ERA.erafiles)
-    geopotential =
-        NCDataset("../../elevation_data/unaligned_geopotentials/$(era_type)_geopotentials.nc", "r")
+    geopotential = NCDataset(
+        "../../elevation_data/unaligned_geopotentials/$(era_type)_geopotentials.nc",
+        "r",
+    )
     sd_data = NCDataset("$(ERA.ERA5DATA)/$(era_type)/$era_file")
     geolon, geolat = geopotential["longitude"][:], geopotential["latitude"][:]
     sdlon, sdlat = sd_data["longitude"][:], sd_data["latitude"][:]

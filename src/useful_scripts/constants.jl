@@ -39,7 +39,7 @@ const usable_basins = [
 const meter_to_inch = 39.3701
 const mm_to_inch = 0.0393701
 
-const hucsizes = [6,8,10]
+const hucsizes = [6, 8, 10]
 
 ak_bounds = [-171, -129, 50, 72]
 eratypes = ["Base", "Land"]
@@ -54,4 +54,5 @@ special_snotels = string.([954, 949, 1189, 1182, 1096])
 na_or_miss(x) = ismissing(x) || isnan(x)
 not_na_or_miss(x) = (!)(na_or_miss(x))
 skipnaormiss(x) = Iterators.filter(not_na_or_miss, x)
-Base.length(x::Base.Iterators.Filter{typeof(not_na_or_miss), T}) where T = count(not_na_or_miss, x)
+Base.length(x::Base.Iterators.Filter{typeof(not_na_or_miss), T}) where {T} =
+    count(not_na_or_miss, x)

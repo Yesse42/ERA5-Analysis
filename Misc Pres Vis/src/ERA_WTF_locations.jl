@@ -16,7 +16,12 @@ for eratype in ERA.eratypes
     lonlats = wtfdict[eratype]
     for point in lonlats
         data = load_era(eratype, point...)
-        p = plot(data.time, data.sd; title = "(lonidx, latidx) = $point", ylabel = "SWE (m)")
+        p = plot(
+            data.time,
+            data.sd;
+            title = "(lonidx, latidx) = $point",
+            ylabel = "SWE (m)",
+        )
         savefig(p, joinpath(savedir, "(lonidx, latidx) = $point.png"))
     end
 end

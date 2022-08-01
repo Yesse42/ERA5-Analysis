@@ -15,7 +15,8 @@ function basin_aggregate(datavec; timecol = :datetime, n_obs_weighting = false)
     end
     sort!(all_times, timecol)
     #Now get all the other variables into the same time scale you just made 
-    revised_data = [sort!(leftjoin(all_times, data; on = timecol), timecol) for data in datavec]
+    revised_data =
+        [sort!(leftjoin(all_times, data; on = timecol), timecol) for data in datavec]
 
     #Now make vectors of vectors for each data column
     combined_data =
@@ -30,12 +31,17 @@ function basin_aggregate(datavec; timecol = :datetime, n_obs_weighting = false)
         if !n_obs_weighting
             return mean(row[notmiss])
         else
-            return sum(row[notmiss] .* weights[notmiss])/sum(weights[notmiss])
+            return sum(row[notmiss] .* weights[notmiss]) / sum(weights[notmiss])
         end
     end
 
     basinmeans = DataFrame(
-        [[possibly_weighted_mean(data, weights) for (data, weights) in zip(eachrow(combodat), eachrow(n_obs))] for combodat in combined_data],
+        [
+            [
+                possibly_weighted_mean(data, weights) for
+                (data, weights) in zip(eachrow(combodat), eachrow(n_obs))
+            ] for combodat in combined_data
+        ],
         not_time_vars,
     )
 
