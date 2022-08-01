@@ -1,6 +1,6 @@
 burrowactivate()
 import ERA5Analysis as ERA
-using CSV, DataFrames, Plots, JLD2
+using CSV, DataFrames, Plots, JLD2, Dates
 
 include(joinpath(ERA.COMPAREDIR, "Load Scripts", "load_snow_course.jl"))
 include(joinpath(ERA.COMPAREDIR, "Load Scripts", "load_era.jl"))

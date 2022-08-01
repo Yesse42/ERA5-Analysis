@@ -43,10 +43,13 @@ loadfuncs = [load_plain_nn, load_cheater, [load_k_fold_func(type) for type in ER
 
 titles = ["Naive Nearest Neighbor, Error Predicting Station Obs", "Minimizing RMSD", "Minimizing RMSD K-Fold Validation (Every 3rd year)", "Minimizing RMSD K-Fold Validation (3 Chunks)"]
 
-for (dir, func, title) in zip(savedirs, loadfuncs, titles)
-    mkpath(dir)
-    datavec = land_vs_base_datagen(;load_era_func = func, base_stat_name = :fom_rmsd, climo_stat_name = :climo_fom_rmsd,
-    time_to_pick=4)
-    style_kwargs = (;title=title, ylabel = "Fraction of Median RMSD", xlabel = "year", margin = 5Plots.mm)
-    error_bar_plot(datavec, dir; style_kwargs)
+for time in [12, 2, 3, 4, 5]
+    for (dir, func, title) in zip(savedirs, loadfuncs, titles)
+        mkpath(dir)
+        datavec = land_vs_base_datagen(;load_era_func = func, base_stat_name = :fom_rmsd, climo_stat_name = :climo_fom_rmsd,
+        time_to_pick=time)
+        [data[isnan.(data)].=0 for data in datavec]
+        style_kwargs = (;title=title, ylabel = "Fraction of Median RMSD", xlabel = "year", margin = 5Plots.mm)
+        error_bar_plot(datavec, dir; style_kwargs, plotname= "Month $time basin_summary.png")
+    end
 end

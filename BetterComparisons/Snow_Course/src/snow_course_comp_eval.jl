@@ -46,5 +46,9 @@ loadfuncs = [load_plain_nn, load_cheater, [load_k_fold_func(type) for type in ER
 
 for (dir, func) in zip(savedirs, loadfuncs)
     mkpath(dir)
-    snow_course_comp_lineplot(;era_load_func = func, savedir = dir)
+    omni_args = (;stat_swe_name = "snow_course_swe_fom_mean",
+    era_swe_name = "era_swe_fom_mean",
+    fom_climo_diff_name = "snow_course_swe_fom_climo_diff_mean",
+    savedir = dir)
+    snow_course_comp_lineplot(;era_load_func = func, savedir = dir, omniplot_args = omni_args)
 end

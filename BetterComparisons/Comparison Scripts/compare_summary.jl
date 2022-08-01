@@ -58,6 +58,7 @@ function comparison_summary(
         (comparecols_time .=> ByRow.(fomfuncs) .=> comparecols .* "_fom")...,
         (comparecols_time .=> ByRow.(normedanomfuncs) .=> comparecols .* "_normed_anom")...,
     )
+    statcols = permutedims(comparecols) .* [""; "_".*["anom", "normed_anom", "fom"]]
 
     #Now the second variable of comparecol should have all of its values (raw swe, anomaly, normed_anomaly)
     #translated into percent of median USING THE FIRST VARIABLE'S median and standard deviation
@@ -94,6 +95,7 @@ function comparison_summary(
         (input_cols .=> ((a,b)->mean(Itr.map(-,a,b))) .=> meandiffnames)...,
         (input_cols .=> myrmsd .=> rmsdnames)...,
         (input_cols .=> StatsBase.Statistics.cor .=> corrnames)...,
+        (eachrow(statcols) .=> myrmsd .=> "native_unit_" .* stat_types .* "_rmsd")...,
         #Also throw in the number of observations for weighting purposes
         nrow=>:n_obs,
         #Also throw in the RMSD for guessing the climatological median (fraction of median = 1) of the first column
