@@ -8,6 +8,7 @@ load_snotel = let
     function load_snotel(id)
         cols = ["datetime", "SWE_$id"]
         outdata = rename(snotel_data[:, cols], ["datetime", "snotel_swe"])
+        dropmissing!(outdata)
         return transform!(
             outdata,
             :datetime => ByRow(Date) => :datetime,

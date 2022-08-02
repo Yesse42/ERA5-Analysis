@@ -24,9 +24,10 @@ function seasonal_datagen(;
     station_compare_args = snotel_comp_args,
     load_era_func,
     times_to_select,
+    basins = ERA.usable_basins
 )
     erastats = [Vector{Float64}() for _ in 1:length(times_to_select)]
-    for basin in ERA.usable_basins
+    for basin in basins
         snotels = basin_to_stations[basin]
         basinmean = general_station_compare(
             eratype,

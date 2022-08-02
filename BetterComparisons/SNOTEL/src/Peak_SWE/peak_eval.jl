@@ -3,8 +3,8 @@ import ERA5Analysis as ERA
 using CSV, DataFrames, Plots, JLD2, Dictionaries
 cd(@__DIR__)
 
-include("../../Snow_Course/src/land_vs_base_func.jl")
-include("seasonal_datagen.jl")
+include("../../../Snow_Course/src/land_vs_base_func.jl")
+include("peak_datagen.jl")
 include(joinpath(ERA.COMPAREDIR, "Load Scripts", "load_era.jl"))
 
 dir = "../vis/plain_nn"
@@ -20,31 +20,31 @@ mkpath(dir)
 snotel_basins = filter(x -> !isempty(basin_to_snotel[x]), ERA.usable_basins)
 
 for eratype in ERA.eratypes
-    mymonths = [11, 12, 1, 2, 3, 4, 5]
-    datavec = seasonal_datagen(;
+    stat_names = ["raw", "anom", "normed_anom", "fom"]
+    datavec = peak_datagen(;
         eratype,
-        stat_name = :fom_rmsd,
-        load_era_func = load_plain_nn,
-        times_to_select = mymonths,
+        basin_to_stations = basin_to_snotel,
+        station_compare_args = peak_comp_args,
+        load_era_func = peak_swe_load(load_plain_nn),
+        stats_to_extract = ["raw", "anom", "normed_anom", "fom"] .* "_rmsd",
         basins = snotel_basins
     )
     [data[isnan.(data)] .= 0 for data in datavec]
+    display(datavec)
     style_kwargs = (;
-        title = "ERA5 $eratype vs SNOTEL by Month",
+        title = "ERA5 $eratype vs SNOTEL Peak SWE",
         ylabel = "Fraction of Median RMSD",
-        xlabel = "year",
+        xlabel = "Water Year",
         margin = 5Plots.mm,
     )
-    cvec = [:yellow, :orange, :red, :purple, :blue, :lightseagreen, :green]
-    labels = string.(mymonths)
-    plotname = "$eratype basin summary.png"
     error_bar_plot(
         datavec,
         dir;
-        cvec,
-        labels,
-        plotname,
-        style_kwargs,
+        plotname = "$(eratype)_peak_swe.png",
+        labels = ["Raw SWE", "Anomaly", "Normed Anomaly", "Frac. of Median"],
+        cvec = [:green, :blue, :purple, :red],
+        ylim = (0, 1.5),
         xticklabels = snotel_basins,
+        style_kwargs
     )
 end
