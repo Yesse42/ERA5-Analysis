@@ -36,6 +36,7 @@ function general_station_compare(
     grouped_or_ungrouped = :grouped_data,
     n_obs_weighting = false,
     eradatadir = eradatadir,
+    min_num_years = 5,
 )
     station_data = DataFrame[]
     used_stations = String[]
@@ -52,6 +53,7 @@ function general_station_compare(
             anom_stat = "median",
             groupfunc,
             median_group_func,
+            min_num_years
         )
         ismissing(analyzed_data) && continue
         analyzed_data = getproperty(analyzed_data, grouped_or_ungrouped)

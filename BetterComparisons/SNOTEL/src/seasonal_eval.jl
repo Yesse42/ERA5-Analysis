@@ -7,7 +7,7 @@ include("../../Snow_Course/src/land_vs_base_func.jl")
 include("seasonal_datagen.jl")
 include(joinpath(ERA.COMPAREDIR, "Load Scripts", "load_era.jl"))
 
-dir = "../vis/plan_nn"
+dir = "../vis/plain_nn"
 
 basin_to_snotel =
     jldopen(joinpath(ERA.NRCSDATA, "cleansed", "SNOTEL_basin_to_id.jld2"))["basin_to_id"]

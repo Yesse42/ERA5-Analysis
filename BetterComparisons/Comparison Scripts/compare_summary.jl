@@ -12,8 +12,10 @@ function comparison_summary(
     anom_stat = "median",
     groupfunc,
     median_group_func,
+    min_num_years
 )
     data = dropmissing(data)
+    length(unique(year.(data[!, timecol]))) < min_num_years && return missing
     comparecols = string.(comparecols)
     timecol = string(timecol)
 

@@ -22,9 +22,10 @@ for eratype in ERA.eratypes
         stats_to_extract = stat_types .* "_rmsd",
     )
     style_kwargs = (;
-        title = "$eratype Statistic Comparison, Naive NN",
+        title = "$eratype Statistic Comparison, Naive NN, April 1st Snow Course",
+        titlefontsize = 12,
         ylabel = "Fraction of Median RMSD",
-        xlabel = "year",
+        xlabel = "Year",
         margin = 5Plots.mm,
     )
     error_bar_plot(
@@ -32,8 +33,8 @@ for eratype in ERA.eratypes
         dir;
         style_kwargs,
         plotname = "$(eratype)_different_statistic_comparison.png",
-        labels = stat_types,
+        labels = ["Raw SWE", "Anomaly", "Normed Anomaly", "Frac. of Median"],
         cvec = [:green, :blue, :purple, :red],
-        ylim = (0, 2),
+        ylim = (0, 1.5),
     )
 end
