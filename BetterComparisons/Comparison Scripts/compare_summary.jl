@@ -94,6 +94,7 @@ function comparison_summary(
     stat_types = ["raw", "anom", "normed_anom", "fom"]
     meandiffnames = stat_types .* "_diff_mean"
     rmsdnames = stat_types .* "_rmsd"
+    unbiasrmsdnames = stat_types .* "_bias_corrected_rmsd"
     corrnames = stat_types .* "_corr"
 
     #Now get correlations and RMSDs, and mean differences after grouping by month
@@ -107,6 +108,7 @@ function comparison_summary(
         comparecols .* "_fom" .=> mean .=> comparecols .* "_fom_mean",
         (input_cols .=> ((a, b) -> mean(Itr.map(-, a, b))) .=> meandiffnames)...,
         (input_cols .=> myrmsd .=> rmsdnames)...,
+        (input_cols .=> ((a,b)->std(a.-b)) .=> unbiasrmsdnames)...,
         (input_cols .=> StatsBase.Statistics.cor .=> corrnames)...,
         (eachrow(statcols) .=> myrmsd .=> "native_unit_" .* stat_types .* "_rmsd")...,
         #Also throw in the number of observations for weighting purposes
@@ -114,6 +116,10 @@ function comparison_summary(
         #Also throw in the RMSD for guessing the climatological median (fraction of median = 1) of the first column
         comparecols[1] .* "_fom" =>
             (x -> myrmsd(x, Itr.repeated(1.0, length(x)))) => :climo_fom_rmsd,
+        comparecols[1] .* "_fom" =>
+            (x -> std(x .- Itr.repeated(1.0, length(x)))) => :climo_fom_bias_corrected_rmsd,
+        comparecols[1] .* "_fom" =>
+            (x -> mean(x.-1)) => :climo_fom_diff_mean,
         comparecols[1] .* "_fom" =>
             (x -> StatsBase.Statistics.cor(collect(x), repeat([1.0], length(x)))) =>
                 :climo_fom_corr,

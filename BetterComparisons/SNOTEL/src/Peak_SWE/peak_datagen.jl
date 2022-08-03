@@ -41,7 +41,6 @@ function peak_datagen(;
 )
     peak_swe_stats = [Float64[] for _ in 1:length(stats_to_extract)]
     for basin in basins
-        println(basin)
         snotels = basin_to_stations[basin]
         basinmean = general_station_compare(
             eratype,

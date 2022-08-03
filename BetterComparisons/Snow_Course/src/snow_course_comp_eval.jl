@@ -54,9 +54,6 @@ loadfuncs =
 for (dir, func) in zip(savedirs, loadfuncs)
     mkpath(dir)
     omni_args = (;
-        stat_swe_name = "snow_course_swe_fom_mean",
-        era_swe_name = "era_swe_fom_mean",
-        fom_climo_diff_name = "snow_course_swe_fom_climo_diff_mean",
         savedir = dir,
     )
     snow_course_comp_lineplot(;

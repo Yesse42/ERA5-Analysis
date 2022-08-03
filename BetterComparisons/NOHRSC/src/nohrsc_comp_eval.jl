@@ -25,9 +25,6 @@ nohrsc_compare_args = (;
 )
 
 nohrsc_plot_args = (;
-    stat_swe_name = "gamma_fom_mean",
-    era_swe_name = "mean_era_swe_fom_mean",
-    fom_climo_diff_name = "climo_fom_rmsd",
     savedir,
 )
 
@@ -44,7 +41,7 @@ snow_course_comp_lineplot(;
     timepick = true,
     figtitle_func = basin -> "$basin ERA5 vs NOHRSC",
     diffsym = :fom_diff_mean,
-    climodiffsym = :gamma_fom_mean,
+    climodiffsym = :climo_fom_diff_mean,
     era_swe_name = :mean_era_swe_fom_mean,
     station_swe_name = :gamma_fom_mean,
 )

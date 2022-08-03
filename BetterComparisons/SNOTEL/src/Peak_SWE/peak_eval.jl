@@ -19,7 +19,7 @@ mkpath(dir)
 
 snotel_basins = filter(x -> !isempty(basin_to_snotel[x]), ERA.usable_basins)
 
-for (stat, statname, ylim) in zip(("diff_mean", "rmsd"), ("Difference", "RMSD"), ((-0.1,0.1), (0,1.5)))
+for (stat, statname, bounds) in zip(("diff_mean", "rmsd", "bias_corrected_rmsd"), ("Bias", "RMSD", "Bias Corrected RMSD"), ((-0.2,0.2),(0, 1.5), (0,1.5)))
     for eratype in ERA.eratypes
         stat_names = ["raw", "anom", "normed_anom", "fom"]
         datavec = peak_datagen(;
@@ -27,7 +27,7 @@ for (stat, statname, ylim) in zip(("diff_mean", "rmsd"), ("Difference", "RMSD"),
             basin_to_stations = basin_to_snotel,
             station_compare_args = peak_comp_args,
             load_era_func = peak_swe_load(load_plain_nn),
-            stats_to_extract = ["raw", "anom", "normed_anom", "fom"] .* "_" .* stat,
+            stats_to_extract = stat_names .* "_" .* stat,
             basins = snotel_basins
         )
         [data[isnan.(data)] .= 0 for data in datavec]
@@ -44,7 +44,7 @@ for (stat, statname, ylim) in zip(("diff_mean", "rmsd"), ("Difference", "RMSD"),
             plotname = "$(eratype)_peak_swe_$stat.png",
             labels = ["Raw SWE", "Anomaly", "Normed Anomaly", "Frac. of Median"],
             cvec = [:green, :blue, :purple, :red],
-            ylim,
+            ylim = bounds,
             xticklabels = snotel_basins,
             style_kwargs
         )

@@ -2,6 +2,7 @@ cd(@__DIR__)
 burrowactivate()
 import ERA5Analysis as ERA
 using NCDatasets, AxisArrays, Plots
+const axes=Base.axes
 datasets = Dataset.(joinpath.(ERA.ERA5DATA, ERA.eratypes, ERA.erafiles))
 nice_datasets = [
     AxisArray(
@@ -26,6 +27,6 @@ for (i, eratype) in enumerate(ERA.eratypes)
     for I in CartesianIndices(data[:, :, 1])
         tseries = data[I, :]
         (any(ismissing.(tseries)) || !(all(tseries .> 0))) && continue
-        display(plot(time, tseries; title = "$eratype"))
+        display(plot(time, tseries; title = "ERA5 $eratype Glacier Oddity", xlabel = "Time", ylabel = "SWE (m)"))
     end
 end

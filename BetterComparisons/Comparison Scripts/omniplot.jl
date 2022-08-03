@@ -8,9 +8,6 @@ function omniplot(
     ydata2;
     basin,
     figtitle,
-    stat_swe_name,
-    era_swe_name,
-    fom_climo_diff_name,
     savedir = "../vis",
 )
     l = grid(2, 2; widths = [0.8, 0.2, 0.8, 0.2])

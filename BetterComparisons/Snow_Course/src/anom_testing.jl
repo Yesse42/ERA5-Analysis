@@ -1,7 +1,7 @@
+cd(@__DIR__)
 burrowactivate()
 import ERA5Analysis as ERA
 using CSV, DataFrames, Plots, JLD2, Dictionaries
-cd(@__DIR__)
 
 include("land_vs_base_func.jl")
 include(joinpath(ERA.COMPAREDIR, "Load Scripts", "load_era.jl"))

@@ -20,9 +20,6 @@ default_compare_args = (;
 )
 
 default_omniplot_args = (;
-    stat_swe_name = "snow_course_swe_fom_mean",
-    era_swe_name = "era_swe_fom_mean",
-    fom_climo_diff_name = "snow_course_swe_fom_climo_diff_mean",
     savedir = "../vis",
 )
 
@@ -30,7 +27,7 @@ function snow_course_comp_lineplot(;
     era_load_func,
     savedir,
     diffsym = :fom_diff_mean,
-    climodiffsym = :snow_course_swe_fom_mean,
+    climodiffsym = :climo_fom_diff_mean,
     era_swe_name = :era_swe_fom_mean,
     station_swe_name = :snow_course_swe_fom_mean,
     timepick = 4,
@@ -74,7 +71,7 @@ function snow_course_comp_lineplot(;
         ⊙(df, sym) = df[!, sym]
         omniplot(
             [basedat.datetime, landdat.datetime, basedat.datetime],
-            [basedat ⊙ diffsym, landdat ⊙ diffsym, basedat ⊙ climodiffsym .- 1],
+            [basedat ⊙ diffsym, landdat ⊙ diffsym, basedat ⊙ climodiffsym],
             [basedat.datetime, landdat.datetime, basedat.datetime],
             [basedat ⊙ era_swe_name, landdat ⊙ era_swe_name, basedat ⊙ station_swe_name];
             basin,
