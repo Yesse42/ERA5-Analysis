@@ -24,7 +24,6 @@ peak_comp_args = pairs((;
     timecol = "datetime",
     groupfunc = x->true,
     median_group_func = x->true,
-    n_obs_weighting = true,
     eradatadir = joinpath(ERA.ERA5DATA, "extracted_points"),
 ))
 

@@ -16,7 +16,6 @@ station_compare_args = pairs((;
     timecol = "datetime",
     groupfunc = shifted_month,
     median_group_func = shifted_month,
-    n_obs_weighting = true,
     eradatadir = joinpath(ERA.ERA5DATA, "extracted_points"),
 ))
 

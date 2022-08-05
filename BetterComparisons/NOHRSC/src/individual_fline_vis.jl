@@ -17,18 +17,24 @@ for basin in ERA.basin_names
         select!(data, :datetime, :gamma, "mean_era_swe" .* ["", "_1"] .=> ERA.eratypes)
 
         plotdata = Array(data[:, Not(:datetime)])
+        medians = mapslices(slice->median(skipmissing(slice)), plotdata, dims = 1)
+        plotdata ./= medians ./ 100
         plotdata[ismissing.(plotdata)] .= NaN
+        c = [:red :green :blue]
         myplot = plot(
             year.(data.datetime),
             plotdata;
             label = ["NOHRSC" "Base" "Land"],
             xlabel = "Year",
-            ylabel = "ERA5 SWE (in)",
-            aspect_ratio = :equal,
+            ylabel = "ERA5 SWE (% median)",
             legend = :outertopleft,
             line = :scatter,
+            title = "$fline",
+            c
         )
-        plot!(myplot, year.(data.datetime), plotdata; label = "")
+        myticks = (year.(data.datetime), Dates.format.(data.datetime, dateformat"yyyy/mm/dd"))
+        plot!(myplot, year.(data.datetime), plotdata; label = "", c, xticks = myticks, rotation=45)
+        
 
         savefig(myplot, "../vis/individual_fline_scatter/$(fline).png")
     end

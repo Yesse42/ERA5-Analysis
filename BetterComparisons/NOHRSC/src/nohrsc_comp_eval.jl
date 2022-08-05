@@ -13,15 +13,31 @@ include.(
 
 savedir = "../vis/plain_nn"
 
+function is_nohrsc_period(time)
+    if Date(2020, 3, 20) <= Date(2020, month(time), day(time)) <= Date(2020, 4, 30)
+        return true
+    else
+        return false
+    end
+end
+
+function nohrsc_group(time)
+    myyear = year(time)
+    if is_nohrsc_period(time)
+        return Date(myyear, 3, 20)
+    else
+        return Date(myyear)
+    end
+end
+
 nohrsc_compare_args = (;
     load_data_func = load_nohrsc_only,
     load_era_func = load_nohrsc_era,
     comparecolnames = [:gamma, :mean_era_swe],
     timecol = "datetime",
-    groupfunc = year,
-    median_group_func = x -> true,
+    groupfunc = nohrsc_group,
+    median_group_func = is_nohrsc_period,
     eradatadir = joinpath(ERA.ERA5DATA, "extracted_points"),
-    n_obs_weighting = true,
 )
 
 nohrsc_plot_args = (;

@@ -34,7 +34,6 @@ function general_station_compare(
     timeperiod = (typemin(DateTime), typemax(DateTime)),
     timecol = "datetime",
     grouped_or_ungrouped = :grouped_data,
-    n_obs_weighting = false,
     eradatadir = eradatadir,
     min_num_years = 5,
 )
@@ -63,7 +62,7 @@ function general_station_compare(
         push!(used_stations, id)
     end
 
-    basinmean = basin_aggregate(station_data; timecol = timecol, n_obs_weighting)
+    basinmean = basin_aggregate(station_data; timecol = timecol)
 
     if ismissing(basinmean)
         return missing

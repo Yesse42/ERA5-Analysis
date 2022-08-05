@@ -102,5 +102,5 @@ for (dict, name) in zip((outdict, outera), ("Mine", "Comp Summary"))
 end
 
 basin_agg =
-    basin_aggregate(dataframe_storage; timecol = :shifted_month, n_obs_weighting = true)
+    basin_aggregate(dataframe_storage; timecol = :shifted_month)
 display(basin_agg[:, r"fom_rmsd"])

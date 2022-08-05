@@ -1,6 +1,7 @@
 *.nc
 *.csv
 *.png
+*.jpg
 *.mp4
 *.pdf
 *.DS_Store

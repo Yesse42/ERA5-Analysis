@@ -20,7 +20,6 @@ nohrsc_args = pairs((;
     #The NOHRSC data is so sparse we can't really afford to split it up, hence grouping not on x->month(x) but instead just x->true
     groupfunc = (x -> true),
     median_group_func = (x -> true),
-    n_obs_weighting = true,
     eradatadir = joinpath(ERA.ERA5DATA, "extracted_points"),
 ))
 

@@ -18,3 +18,7 @@ function round_water_year(time::T; startmonth = startmonth, startday=startday) w
     end
     return T(Date(raw_year, startmonth, startday))
 end
+
+function day_of_water_year(time; startmonth = startmonth, startday = startday)
+    return ((time - round_water_year(time; startmonth, startday)) ÷ Day(1)) + 1
+end

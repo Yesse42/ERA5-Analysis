@@ -10,7 +10,6 @@ snotel_comp_args = pairs((;
     timecol = "datetime",
     groupfunc = month,
     median_group_func = month,
-    n_obs_weighting = true,
     eradatadir = joinpath(ERA.ERA5DATA, "extracted_points"),
 ))
 
