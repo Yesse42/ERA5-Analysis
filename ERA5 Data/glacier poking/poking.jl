@@ -24,9 +24,11 @@ filtered =
 for (i, eratype) in enumerate(ERA.eratypes)
     data = filtered[i]
     time = AxisArrays.axes(data, 3).val
-    for I in CartesianIndices(data[:, :, 1])
+    for (i,I) in enumerate(CartesianIndices(data[:, :, 1]))
         tseries = data[I, :]
         (any(ismissing.(tseries)) || !(all(tseries .> 0))) && continue
-        display(plot(time, tseries; title = "ERA5 $eratype Glacier Oddity", xlabel = "Time", ylabel = "SWE (m)"))
+        p = plot(time, tseries; title = "ERA5 $eratype Glacier Oddity", xlabel = "Time", ylabel = "SWE (m)", label="")
+        display(p)
+        savefig(p, "oddities/$(i)_oddity.png")
     end
 end

@@ -19,7 +19,7 @@ mkpath(dir)
 
 snotel_basins = filter(x -> !isempty(basin_to_snotel[x]), ERA.usable_basins)
 
-for (stat, statname, bounds) in zip(("diff_mean", "rmsd", "bias_corrected_rmsd"), ("Bias", "RMSD", "Bias Corrected RMSD"), ((-0.2,0.2),(0, 1.5), (0,1.5)))
+for (stat, statname, bounds) in zip(("diff_mean", "rmsd", "bias_corrected_rmsd"), ("Bias", "RMSD", "Bias Corrected RMSD"), ((-0.2,0.2),(0, 1), (0,1)))
     for eratype in ERA.eratypes
         stat_names = ["raw", "anom", "normed_anom", "fom"]
         datavec = peak_datagen(;
