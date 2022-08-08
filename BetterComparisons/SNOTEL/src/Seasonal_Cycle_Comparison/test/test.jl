@@ -15,6 +15,8 @@ shape = swe_shape(data.snotel_swe, day_of_water_year.(data.datetime), 0.01:0.05:
 
 smoothdata = swe_shape_output_to_interpolated_values(shape)
 
+smoothdata = pad_to_full_year(smoothdata)
+
 p = plot(smoothdata.daysofyear, smoothdata.swe_interped)
 
 plot!(p, day_of_water_year.(data.datetime), data.snotel_swe ./ maximum(data.snotel_swe))

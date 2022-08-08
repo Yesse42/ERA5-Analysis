@@ -12,9 +12,6 @@ dir = "../vis/plain_nn"
 basin_to_snotel =
     jldopen(joinpath(ERA.NRCSDATA, "cleansed", "SNOTEL_basin_to_id.jld2"))["basin_to_id"]
 
-load_plain_nn(_, eratype, id) =
-    load_era(joinpath(ERA.ERA5DATA, "better_extracted_points", "plain_nn"), eratype, id)
-
 mkpath(dir)
 
 snotel_basins = filter(x -> !isempty(basin_to_snotel[x]), ERA.usable_basins)

@@ -12,16 +12,13 @@ dir = "../../vis/plain_nn"
 basin_to_snotel =
     jldopen(joinpath(ERA.NRCSDATA, "cleansed", "SNOTEL_basin_to_id.jld2"))["basin_to_id"]
 
-load_plain_nn(_, eratype, id) =
-    load_era(joinpath(ERA.ERA5DATA, "better_extracted_points", "plain_nn"), eratype, id)
-
 mkpath(dir)
 
 snotel_basins = filter(x -> !isempty(basin_to_snotel[x]), ERA.usable_basins)
 
 for (stat, statname, bounds) in zip(("diff_mean", "rmsd", "bias_corrected_rmsd"), ("Bias", "RMSD", "Bias Corrected RMSD"), ((-0.2,0.2),(0, 1), (0,1)))
     for eratype in ERA.eratypes
-        stat_names = ["raw", "anom", "normed_anom", "fom"]
+        stat_names = ["raw", "anom", "normed_anom", "fom", "climo_fom"]
         datavec = peak_datagen(;
             eratype,
             basin_to_stations = basin_to_snotel,
@@ -42,8 +39,8 @@ for (stat, statname, bounds) in zip(("diff_mean", "rmsd", "bias_corrected_rmsd")
             datavec,
             dir;
             plotname = "$(eratype)_peak_swe_$stat.png",
-            labels = ["Raw SWE", "Anomaly", "Normed Anomaly", "Frac. of Median"],
-            cvec = [:green, :blue, :purple, :red],
+            labels = ["Raw SWE", "Anomaly", "Normed Anomaly", "Frac. of Median", "Climatological Median"],
+            cvec = [:green, :blue, :purple, :red, :orange],
             ylim = bounds,
             xticklabels = snotel_basins,
             style_kwargs

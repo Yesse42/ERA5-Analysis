@@ -18,3 +18,8 @@ function load_era(eradatadir, eratype, id)
 
     return eradata
 end
+
+load_plain_nn(_, eratype, id) = load_era(joinpath(ERA.ERA5DATA, "better_extracted_points", "plain_nn"), eratype, id)
+
+load_plain_nn(eratype, id) = load_plain_nn(nothing, eratype, id)
+

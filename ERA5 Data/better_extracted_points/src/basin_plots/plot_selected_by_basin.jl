@@ -108,9 +108,9 @@ for (eratype, erafile) in zip(ERA.eratypes, ERA.erafiles)
 
         # make the norm:  Note the center is offset so that the land has more
         # dynamic range:
-        divnorm = colors.TwoSlopeNorm(; vmin = -500.0, vcenter = 0.0, vmax = 4000.0)
+        divnorm = colors.TwoSlopeNorm(; vmin = -4000.0, vcenter = 0.0, vmax = 4000.0)
 
-        pcm = ax.contourf(
+        pcm = ax.pcolormesh(
             longrid[plotmask],
             latgrid[plotmask],
             elev[plotmask];

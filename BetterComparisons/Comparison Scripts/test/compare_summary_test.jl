@@ -8,9 +8,6 @@ include(joinpath(ERA.COMPAREDIR, "Load Scripts", "load_era.jl"))
 include("../compare_summary.jl")
 include("../comparison_machinery.jl")
 
-load_plain_nn(_, eratype, id) =
-    load_era(joinpath(ERA.ERA5DATA, "better_extracted_points", "plain_nn"), eratype, id)
-
 #Load in the snow course and ERA5
 basin_to_courses =
     jldopen(joinpath(ERA.NRCSDATA, "cleansed", "Snow_Course_basin_to_id.jld2"))["basin_to_id"]

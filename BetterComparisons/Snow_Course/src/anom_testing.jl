@@ -8,14 +8,12 @@ include(joinpath(ERA.COMPAREDIR, "Load Scripts", "load_era.jl"))
 
 dir = "../vis/plain_nn"
 
-func =
-    load_plain_nn(_, eratype, id) =
-        load_era(joinpath(ERA.ERA5DATA, "better_extracted_points", "plain_nn"), eratype, id)
+func = load_plain_nn
 
 mkpath(dir)
 for (stat, statname, bounds) in zip(("diff_mean", "rmsd", "bias_corrected_rmsd"), ("Bias", "RMSD", "Bias Corrected RMSD"), ((-0.2,0.2),(0, 1), (0,1)))
     for eratype in ERA.eratypes
-        stat_types = ["raw", "anom", "normed_anom", "fom"]
+        stat_types = ["raw", "anom", "normed_anom", "fom", "climo_fom"]
         datavec = raw_anom_fom_comp_datagen(;
             eratype,
             load_era_func = load_plain_nn,
@@ -34,8 +32,8 @@ for (stat, statname, bounds) in zip(("diff_mean", "rmsd", "bias_corrected_rmsd")
             dir;
             style_kwargs,
             plotname = "$(eratype)_$(statname)_different_statistic_comparison.png",
-            labels = ["Raw SWE", "Anomaly", "Normed Anomaly", "Frac. of Median"],
-            cvec = [:green, :blue, :purple, :red],
+            labels = ["Raw SWE", "Anomaly", "Normed Anomaly", "Frac. of Median", "Climatological Median"],
+            cvec = [:green, :blue, :purple, :red, :orange],
             ylim = bounds,
         )
     end

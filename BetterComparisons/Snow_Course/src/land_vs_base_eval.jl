@@ -39,9 +39,6 @@ end
 
 savedirs = "../vis/" .* ["plain_nn", "cheater", joinpath.("k-fold", ERA.foldtypes)...]
 
-load_plain_nn(_, eratype, id) =
-    load_era(joinpath(ERA.ERA5DATA, "better_extracted_points", "plain_nn"), eratype, id)
-
 load_cheater(_, eratype, id) =
     load_era(joinpath(ERA.ERA5DATA, "better_extracted_points", "cheater_data"), eratype, id)
 
@@ -49,7 +46,7 @@ loadfuncs =
     [load_plain_nn, load_cheater, [load_k_fold_func(type) for type in ERA.foldtypes]...]
 
 titles = [
-    "Naive Nearest Neighbor, Error Predicting Station Obs",
+    "Nearest Neighbor Error",
     "Minimizing RMSD",
     "Minimizing RMSD K-Fold Validation (Every 3rd year)",
     "Minimizing RMSD K-Fold Validation (3 Chunks)",

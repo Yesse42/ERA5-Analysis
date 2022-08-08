@@ -68,6 +68,7 @@ function snow_course_comp_lineplot(;
         #Now get the percent of median and anomaly diff
         any(isempty.(eradata)) && continue
         ⊙(df, sym) = df[!, sym]
+        set!(too, basin, (basedat, landdat))
         omniplot(
             [basedat.datetime, landdat.datetime, basedat.datetime],
             [basedat ⊙ diffsym, landdat ⊙ diffsym, basedat ⊙ climodiffsym],

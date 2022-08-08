@@ -2,10 +2,10 @@ include(joinpath(@__DIR__, "../comparison_constants.jl"))
 
 using Missings
 
-load_snotel = let
+ let
     snotel_data = CSV.read(joinpath(ERA.NRCSDATA, "cleansed", "SNOTEL_Data.csv"), DataFrame)
 
-    function load_snotel(id)
+    global function load_snotel(id)
         cols = ["datetime", "SWE_$id"]
         outdata = rename(snotel_data[:, cols], ["datetime", "snotel_swe"])
         dropmissing!(outdata)
@@ -17,3 +17,5 @@ load_snotel = let
         )
     end
 end
+
+load_snotel(_, id) = load_snotel(id)
