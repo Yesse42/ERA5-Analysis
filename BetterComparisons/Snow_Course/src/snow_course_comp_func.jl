@@ -24,9 +24,6 @@ default_omniplot_args = (;
 
 function snow_course_comp_lineplot(;
     era_load_func,
-    savedir,
-    diffsym = :fom_diff_mean,
-    climodiffsym = :climo_fom_diff_mean,
     era_swe_name = :era_swe_fom_mean,
     station_swe_name = :snow_course_swe_fom_mean,
     timepick = 4,
@@ -65,18 +62,18 @@ function snow_course_comp_lineplot(;
             ) for d in eradata
         ]
         basedat, landdat = eradata
+        ⊙(df, sym) = df[!, sym]
+        cornums = [cor(data⊙era_swe_name, data⊙station_swe_name) for data in eradata]
+        corrs = Dict(ERA.eratypes .* " Corr" .=> round.(cornums, digits=2))
         #Now get the percent of median and anomaly diff
         any(isempty.(eradata)) && continue
-        ⊙(df, sym) = df[!, sym]
-        set!(too, basin, (basedat, landdat))
         omniplot(
-            [basedat.datetime, landdat.datetime, basedat.datetime],
-            [basedat ⊙ diffsym, landdat ⊙ diffsym, basedat ⊙ climodiffsym],
             [basedat.datetime, landdat.datetime, basedat.datetime],
             [basedat ⊙ era_swe_name, landdat ⊙ era_swe_name, basedat ⊙ station_swe_name];
             basin,
             figtitle = figtitle_func(basin),
             omniplot_args...,
+            corrs
         )
     end
 end

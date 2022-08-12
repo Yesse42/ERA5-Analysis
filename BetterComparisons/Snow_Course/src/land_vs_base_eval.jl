@@ -46,7 +46,7 @@ loadfuncs =
     [load_plain_nn, load_cheater, [load_k_fold_func(type) for type in ERA.foldtypes]...]
 
 titles = [
-    "Nearest Neighbor Error",
+    "Snow Course RMSD",
     "Minimizing RMSD",
     "Minimizing RMSD K-Fold Validation (Every 3rd year)",
     "Minimizing RMSD K-Fold Validation (3 Chunks)",
@@ -66,7 +66,7 @@ for (stat, statname, bounds) in zip(("diff_mean", "rmsd", "bias_corrected_rmsd")
             style_kwargs = (;
                 title = title,
                 ylabel = "Fraction of Median $statname",
-                xlabel = "year",
+                xlabel = "Basin",
                 margin = 5Plots.mm,
             )
             error_bar_plot(
@@ -78,4 +78,33 @@ for (stat, statname, bounds) in zip(("diff_mean", "rmsd", "bias_corrected_rmsd")
             )
         end
     end
+end
+
+#Now generate the same stats for the Chena Basin
+let 
+    dir = "../vis/pres"
+
+    mkpath(dir)
+            datavec = land_vs_base_datagen(;
+                load_era_func = load_plain_nn,
+                base_stat_name = "fom_rmsd",
+                climo_stat_name = "climo_fom_rmsd",
+                time_to_pick = 4,
+                basins = ["Chena"]
+            )
+            [data[isnan.(data)] .= 0 for data in datavec]
+            style_kwargs = (;
+                title = "Chena Snow Course April 1st RMSD",
+                ylabel = "Fraction of Median RMSD",
+                xlabel = "Basin",
+                margin = 5Plots.mm,
+            )
+            error_bar_plot(
+                datavec,
+                dir;
+                style_kwargs,
+                plotname = "Chena Sample.png",
+                ylim = (0,0.5)
+            )
+
 end

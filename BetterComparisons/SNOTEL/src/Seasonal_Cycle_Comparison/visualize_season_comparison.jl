@@ -5,7 +5,8 @@ using CSV, DataFrames, StatsBase, Plots, JLD2
 
 include("compare_seasonal_cycles.jl")
 
-savedir = "../../vis/plain_nn/"
+savedir = "../../vis/plain_nn/seasonal_cycle"
+mkpath(savedir)
 
 basin_to_snotel =
     jldopen(joinpath(ERA.NRCSDATA, "cleansed", "SNOTEL_basin_to_id.jld2"))["basin_to_id"]
@@ -33,8 +34,12 @@ for basin in ERA.usable_basins
     end
 end
 
+water_year_day_formatter(dayofyear) = Dates.format(Date(2021, 9, 1) + Day(dayofyear-1), dateformat"mm/dd")
+
+xticks = day_of_water_year.((Date(2021, m) for m in [9:12; 1:8]))
+
 for basin in ERA.usable_basins
-    myplotargs = (title = "$basin Mean Seasonal Cycle", ylabel = "Fraction of Peak SWE", xlabel = "Day of Water Year")
+    myplotargs = (title = "$basin Mean Seasonal Cycle", ylabel = "Fraction of Peak SWE", xlabel = "Day of Water Year", xformatter = water_year_day_formatter, xticks)
 
     stations = basin_to_snotel[basin]
 

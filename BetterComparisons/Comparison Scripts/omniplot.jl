@@ -2,15 +2,13 @@ using Plots, RecursiveArrayTools
 
 "The data should be input in vectors in the order base land station"
 function omniplot(
-    xdata1,
-    ydata1,
     xdata2,
     ydata2;
     basin,
     figtitle,
     savedir = "../vis",
+    corrs = []
 )
-    l = grid(2, 2; widths = [0.8, 0.2, 0.8, 0.2])
 
     function badhcat(args...; fill = NaN)
         maxlen = maximum(length.(args))
@@ -22,58 +20,28 @@ function omniplot(
 
     baselandstationcolors = [:blue :purple :orange]
 
-    xdata = badhcat(xdata1...; fill = first(first(xdata1)))
-    ydata = badhcat(ydata1...)
-    p1 = plot(
-        xdata,
-        ydata;
-        title = "Fraction of 1991-2020 Median Difference",
-        xlabel = "Year",
-        ylabel = "FOM Diff (unitless)",
-        legend = :none,
-        c = baselandstationcolors,
-    )
-    scatter!(p1, xdata, ydata; label = "", c = baselandstationcolors, ms = 2)
-
     xdata = badhcat(xdata2...; fill = first(first(xdata2)))
     ydata = badhcat(ydata2...)
     p2 = plot(
         xdata,
         ydata;
-        title = "Fraction of Median",
+        title = "",
         xlabel = "Year",
-        ylabel = "Fraction of Median",
-        legend = :none,
-        c = baselandstationcolors,
-    )
-    legendp2 = plot(
-        0:0,
-        (1:3)';
-        grid = false,
-        showaxis = :hide,
+        ylabel = "Basin Averaged Fraction of Median",
+        legend = :topleft,
         label = ["Base" "Land" "Station"],
-        xaxis = nothing,
-        yaxis = nothing,
         c = baselandstationcolors,
     )
+    if !isempty(corrs)
+        ypos = 0.95
+        for (key, value) in pairs(corrs)
+            annotate!(p2, [(0.9, ypos), Plots.text("$key: $value", 8)])
+            ypos -= 0.05
+        end
+    end
     scatter!(p2, xdata, ydata; label = "", c = baselandstationcolors, ms = 2)
-    legendp1 = plot(
-        0:0,
-        (1:3)';
-        grid = false,
-        showaxis = :hide,
-        label = ["Base vs Station" "Land vs Station" "Station vs Median"],
-        xaxis = nothing,
-        yaxis = nothing,
-        c = baselandstationcolors,
-        legendfontsize = 5,
-    )
     bp = plot(
-        p1,
-        legendp1,
         p2,
-        legendp2;
-        layout = l,
         plot_title = figtitle,
         plot_titlefontsize = 13,
     )

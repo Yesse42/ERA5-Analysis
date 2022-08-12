@@ -27,57 +27,12 @@ function land_vs_base_datagen(;
     station_compare_args = station_compare_args,
     time_to_pick = 3,
     load_era_func,
+    basins = ERA.usable_basins,
 )
     land_stat = Float64[]
     base_stat = Float64[]
     climo_stat = Float64[]
-    for basin in ERA.usable_basins
-        eradata = DataFrame[]
-        for eratype in ERA.eratypes
-            courses = basin_to_stations[basin]
-            basinmean = general_station_compare(
-                eratype,
-                courses;
-                load_era_func,
-                station_compare_args...,
-            )
-            ismissing(basinmean) && break
-            push!(eradata, basinmean.basindata)
-        end
-
-        length(eradata) < length(ERA.eratypes) && continue
-
-        #Now plot the difference in percent of median and the anomaly difference on separate axes,
-        #for both era5 land and base
-        #Filter for the time to pick
-        eradata = [filter(x -> x.datetime == time_to_pick, d) for d in eradata]
-        if any(isempty.(eradata))
-            push!.((land_stat, base_stat, climo_stat), NaN)
-            continue
-        end
-        #Now get the percent of median and anomaly diff
-        ..(df, sym) = df[!, sym]
-        push!(land_stat, only(eradata[2] .. land_stat_name))
-        push!(base_stat, only(eradata[1] .. base_stat_name))
-        push!(climo_stat, only(eradata[1] .. climo_stat_name))
-    end
-
-    #Now return a vector of the vectors
-    return collect((land_stat, climo_stat, base_stat))
-end
-
-function mean_then_function(;
-    basin_to_stations = def_basin_to_station,
-    base_load,
-    land_load,
-    station_load,
-    intermediate_grouper,
-    reduce_func
-)
-    land_stat = Float64[]
-    base_stat = Float64[]
-    climo_stat = Float64[]
-    for basin in ERA.usable_basins
+    for basin in basins
         eradata = DataFrame[]
         for eratype in ERA.eratypes
             courses = basin_to_stations[basin]
@@ -120,9 +75,10 @@ function raw_anom_fom_comp_datagen(;
     station_compare_args = station_compare_args,
     time_to_pick = 4,
     T = Union{Float64, Missing},
+    basins = ERA.usable_basins,
 )
     datastore = [T[] for _ in 1:length(stats_to_extract)]
-    for basin in ERA.usable_basins
+    for basin in basins
         courses = basin_to_stations[basin]
         basinmean = general_station_compare(
             eratype,
@@ -181,6 +137,9 @@ function error_bar_plot(
         label = permutedims(labels),
         fillcolor = permutedims(cvec),
     )
-
-    return savefig(p, joinpath(savedir, plotname))
+    if !isempty(savedir)
+        return savefig(p, joinpath(savedir, plotname))
+    else 
+        return p
+    end
 end

@@ -21,10 +21,10 @@ for (stat, statname, bounds) in zip(("diff_mean", "rmsd", "bias_corrected_rmsd")
             stats_to_extract = stat_types .* "_$stat",
         )
         style_kwargs = (;
-            title = "$eratype Statistic Comparison, Naive NN, April 1st Snow Course",
+            title = "ERA5 $eratype SWE Metric Comp., April 1st Snow Course",
             titlefontsize = 12,
             ylabel = "Fraction of Median $statname",
-            xlabel = "Year",
+            xlabel = "Basin",
             margin = 5Plots.mm,
         )
         error_bar_plot(
@@ -37,4 +37,36 @@ for (stat, statname, bounds) in zip(("diff_mean", "rmsd", "bias_corrected_rmsd")
             ylim = bounds,
         )
     end
+end
+
+let 
+
+    dir = "../vis/pres"
+    mkpath(dir)
+
+    stat_types = ["raw", "anom", "normed_anom", "fom", "climo_fom"]
+    datavec = raw_anom_fom_comp_datagen(;
+        eratype = "Land",
+        load_era_func = load_plain_nn,
+        basin_to_stations = def_basin_to_station,
+        stats_to_extract = stat_types .* "_rmsd",
+        basins = ["Chena"]
+    )
+    style_kwargs = (;
+        title = "Chena ERA5 Land SWE Metric Comp., April 1st Snow Course",
+        titlefontsize = 12,
+        ylabel = "Fraction of Median Bias",
+        xlabel = "Basin",
+        margin = 5Plots.mm,
+    )
+    error_bar_plot(
+        datavec,
+        dir;
+        style_kwargs,
+        plotname = "Sample_Statistic_Comp.png",
+        labels = ["Raw SWE", "Anomaly", "Normed Anomaly", "Frac. of Median", "Climatological Median"],
+        cvec = [:green, :blue, :purple, :red, :orange],
+        ylim = (0,0.6),
+    )
+
 end

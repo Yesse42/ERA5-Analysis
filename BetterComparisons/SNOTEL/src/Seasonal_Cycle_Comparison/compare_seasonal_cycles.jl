@@ -133,7 +133,6 @@ end
 
 function plot_basin_cycle(stations, loadfuncs, labels, colnames; timecol, analysis_args = analysis_kwargs,
     plotargs)
-    (;fractions) = analysis_args
     myp = plot(;plotargs...)
     for (func, label, colname) in zip(loadfuncs, labels, colnames)
         data = basinwide_mean_cycle(stations, func; 

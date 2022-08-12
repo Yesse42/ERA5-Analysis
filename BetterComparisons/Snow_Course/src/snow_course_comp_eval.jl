@@ -56,7 +56,6 @@ for (dir, func) in zip(savedirs, loadfuncs)
     )
     snow_course_comp_lineplot(;
         era_load_func = func,
-        savedir = dir,
         omniplot_args = omni_args,
     )
 end

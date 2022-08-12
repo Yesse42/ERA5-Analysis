@@ -50,14 +50,11 @@ basin_to_flines =
 mkpath(savedir)
 snow_course_comp_lineplot(;
     era_load_func = load_nohrsc_era,
-    savedir,
     basin_to_station = basin_to_flines,
     station_compare_args = nohrsc_compare_args,
     omniplot_args = nohrsc_plot_args,
     timepick = true,
     figtitle_func = basin -> "$basin ERA5 vs NOHRSC",
-    diffsym = :fom_diff_mean,
-    climodiffsym = :climo_fom_diff_mean,
     era_swe_name = :mean_era_swe_fom_mean,
     station_swe_name = :gamma_fom_mean,
 )

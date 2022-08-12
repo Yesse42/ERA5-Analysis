@@ -102,13 +102,13 @@ for (eratype, erafile) in zip(ERA.eratypes, ERA.erafiles)
 
         #Adapted from https://matplotlib.org/stable/tutorials/colors/colormapnorms.html#sphx-glr-tutorials-colors-colormapnorms-py
         colors_undersea = plt.cm.terrain(np.linspace(0, 0.17, 256))
-        colors_land = plt.cm.terrain(np.linspace(0.25, 2, 256))
+        colors_land = plt.cm.terrain(np.linspace(0.25, 0.8, 256))
         all_colors = np.vstack((colors_undersea, colors_land))
         terrain_map = colors.LinearSegmentedColormap.from_list("terrain_map", all_colors)
 
         # make the norm:  Note the center is offset so that the land has more
         # dynamic range:
-        divnorm = colors.TwoSlopeNorm(; vmin = -4000.0, vcenter = 0.0, vmax = 4000.0)
+        divnorm = colors.TwoSlopeNorm(; vmin = -10.0, vcenter = 0.0, vmax = 2000.0)
 
         pcm = ax.pcolormesh(
             longrid[plotmask],
@@ -120,6 +120,11 @@ for (eratype, erafile) in zip(ERA.eratypes, ERA.erafiles)
             transform = ccrs.PlateCarree(),
             zorder = 0,
         )
+
+        #Now plot the grid if only the Chena Basin
+        if basin == "Chena"
+            ax.scatter(longrid[plotmask], latgrid[plotmask], color = "grey", transform = ccrs.PlateCarree())
+        end
 
         # Simple geographic plot, set aspect ratio beecause distance between lines of
         # longitude depends on latitude.
