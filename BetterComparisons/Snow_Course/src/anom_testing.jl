@@ -55,7 +55,7 @@ let
     style_kwargs = (;
         title = "Chena ERA5 Land SWE Metric Comp., April 1st Snow Course",
         titlefontsize = 12,
-        ylabel = "Fraction of Median Bias",
+        ylabel = "Fraction of Median RMSD",
         xlabel = "Basin",
         margin = 5Plots.mm,
     )

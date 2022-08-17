@@ -29,7 +29,7 @@ function snow_course_comp_lineplot(;
     timepick = 4,
     basin_to_station = snow_course_from_basin,
     station_compare_args = default_compare_args,
-    figtitle_func = (basin -> "$basin ERA5 vs Snow Course (Mar 16th - Apr 15th)"),
+    figtitle_func = (basin -> "$basin ERA5 vs Snow Course, April 1st"),
     omniplot_args = default_omniplot_args,
 )
     for basin in ERA.usable_basins
