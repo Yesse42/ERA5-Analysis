@@ -17,11 +17,13 @@ sds = getindex.(getindex.(datasets, "sd"), :)
 for sd in sds
     sd[ismissing.(sd)] .= NaN
 end
-function isglacier(sd_arr; glacier_thresh = 0.95, snow_thresh = 1e-3)
-    return glacier_mask =
-        (sum(sd_arr .> snow_thresh; dims = 3) ./ size(sd_arr, 3)) .>= glacier_thresh .||
-        isnan.(sd_arr[:, :, 1])
+function isglacier(era_sd; glacier_thresh = 0.95, min_snow = 1e-3)
+    era_sd[ismissing.(era_sd)] .= NaN
+    return (
+        (sum(era_sd .> min_snow; dims = 3) ./ size(era_sd, 3)) .>= glacier_thresh
+    ) .|| isnan.(era_sd[:, :, 1]) .|| mapslices(slice -> all(slice .< min_snow), era_sd, dims=3)
 end
+
 glacierarrs = Dictionary(eratypes, isglacier.(sds))
 #Set missing areas to show as glacier so they are excluded as well
 for (glaciermask, sd) in zip(glacierarrs, sds)

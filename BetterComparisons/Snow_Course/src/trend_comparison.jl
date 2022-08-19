@@ -19,7 +19,7 @@ function theil_sen(x, y; bootstrap_size  = 600, null = 0)
         boot_x, boot_y = (@view(data[boot_sample_idxs]) for data in (x, y))
         boot_arr[i] = median(slopes(boot_x, boot_y, idxs))
     end
-    quant = quantilerank(boot_arr, 0)
+    quant = quantilerank(boot_arr, null)
     quant = min(quant, 1-quant)
 
     return (slope, p_val = quant)
@@ -99,7 +99,7 @@ function basin_trends(;basins = ERA.usable_basins, basin_to_stations = def_basin
         gp = getproperty
         for (sym, vec) in zip((:mean_slope, :n_sig, :n_tot), (datavecs, sigvecs, totvecs))
             push!(vec[1], gp(landdat[:era_swe], sym))
-            push!(vec[2], gp(basedat[:snow_course_swe], sym))
+            push!(vec[2], gp(landdat[:snow_course_swe], sym))
             push!(vec[3], gp(basedat[:era_swe], sym))
         end
     end

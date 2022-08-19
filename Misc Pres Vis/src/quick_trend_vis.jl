@@ -12,7 +12,7 @@ goodproj = ccrs.AlbersEqualArea(central_longitude = -147,standard_parallels = (5
 function theil_sen(x, y)
     idxs = eachindex(x)
     theil_slope = median((y[i]-y[j])/(x[i]-x[j]) for i in idxs for j in 1:(i-1))
-    return theil_slope
+    return (;theil_slope, intercept = median(b - theil_slope .* a for (a,b) in zip(x,y)))
 end
 
 eratime = times["Land"]
@@ -42,18 +42,22 @@ sort!(april_average_slice, :datetime)
 
 april_average_sds = reduce((x...)->cat(x...;dims=3), april_average_slice.sd)
 
-init_swe = mapslices(median, april_average_sds, dims=3)
-
-erasd[init_swe .< 0.0254, :] .= NaN
-
 datayears = april_average_slice.datetime
 
 function get_slope(slice)
-    isnan(first(slice)) && return NaN
+    isnan(first(slice)) && return (theil_slope = NaN, intercept = NaN)
     return theil_sen(datayears, slice)
 end
 
-trends = [get_slope(@view(april_average_sds[i,j,:])) for i in Base.axes(april_average_sds, 1), j in Base.axes(april_average_sds, 2)]
+slopes_intercepts = [get_slope(@view(april_average_sds[i,j,:])) for i in Base.axes(april_average_sds, 1), j in Base.axes(april_average_sds, 2)]
+
+trends = getproperty.(slopes_intercepts, :theil_slope)
+
+intercepts = getproperty.(slopes_intercepts, :intercept)
+
+init_swe = first(datayears) .* trends .+ intercepts
+
+trends[init_swe .< 0.0254] .= NaN
 
 trends .*= length(datayears) ./ init_swe .* 100
 
