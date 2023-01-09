@@ -22,7 +22,7 @@ function theil_sen(x, y; bootstrap_size  = 600, null = 0)
     quant = quantilerank(boot_arr, null)
     quant = min(quant, 1-quant)
 
-    return (slope, p_val = quant)
+    return (;slope, p_val = quant)
 end
 
 function lstsq(x,y)
