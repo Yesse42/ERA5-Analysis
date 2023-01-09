@@ -86,12 +86,24 @@ function comparison_summary(
     dropmissing!(diffdata)
     transform!(diffdata, (raw_names_with_time .=> transform_funcs .=> as_fom_names)...)
 
+    #Now add in another one that uses ranks
+    with_time_period = groupby(transform!(diffdata, :datetime=>ByRow(median_group_func)=>:median_period), :median_period)
+    #And now use ranking to work some magic
+    function rank_func(col1, col2)
+        ranks = competerank(col2)
+        return sort(col1)[ranks]
+    end
+    rank_name = "rank_as_col1_fom"
+    diffdata = combine(with_time_period, Not(:median_period), comparecols .* "_fom" => rank_func=>rank_name)
+
     #Now take the differences between the first datacol's percent of median and the
     #second datacol's 4 different guesses of the first column's percent of median
 
     col2_as_fom_names = [as_fom_names; comparecols[2] .* "_fom"]
+    push!(col2_as_fom_names, rank_name)
     input_cols = [[comparecols[1] .* "_fom"; col] for col in col2_as_fom_names]
-    stat_types = ["raw", "anom", "normed_anom", "fom"]
+    stat_types = ["raw", "anom", "normed_anom", "fom", "rank"]
+    stats_without_rank = stat_types[1:end-1]
     meandiffnames = stat_types .* "_diff_mean"
     rmsdnames = stat_types .* "_rmsd"
     unbiasrmsdnames = stat_types .* "_bias_corrected_rmsd"
@@ -110,7 +122,7 @@ function comparison_summary(
         (input_cols .=> myrmsd .=> rmsdnames)...,
         (input_cols .=> ((a,b)->std(a.-b)) .=> unbiasrmsdnames)...,
         (input_cols .=> StatsBase.Statistics.cor .=> corrnames)...,
-        (eachrow(statcols) .=> myrmsd .=> "native_unit_" .* stat_types .* "_rmsd")...,
+        (eachrow(statcols) .=> myrmsd .=> "native_unit_" .* stats_without_rank .* "_rmsd")...,
         #Also throw in the number of observations for weighting purposes
         nrow => :n_obs,
         #Also throw in the RMSD for guessing the climatological median (fraction of median = 1) of the first column

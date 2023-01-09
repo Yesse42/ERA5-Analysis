@@ -64,17 +64,27 @@ for (stat, statname, bounds) in zip(("diff_mean", "rmsd", "bias_corrected_rmsd")
             )
             [data[isnan.(data)] .= 0 for data in datavec]
             style_kwargs = (;
-                title = title,
+                title = "$(monthname(time)) $title",
                 ylabel = "Fraction of Median $statname",
                 xlabel = "Basin",
                 margin = 5Plots.mm,
             )
+            gr()
             error_bar_plot(
                 datavec,
                 dir;
                 style_kwargs,
                 plotname = "Month $time basin_summary $statname.png",
                 ylim = bounds
+            )
+            heatmap_kwargs = (; style_kwargs..., c=:thermometer, clim=(0,1), dpi=300, xrotation=30, ylabel="Observation Source", colorbar_title="Fraction of Median $statname")
+            error_heatmap(
+                datavec,
+                dir;
+                xlabels = ERA.usable_basins,
+                ylabels = ["ERA5 Land", "Station Median", "ERA5 Base"],
+                style_kwargs = heatmap_kwargs,
+                plotname = "Month $time basin_summary $statname heatmap.png",
             )
         end
     end

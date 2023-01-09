@@ -34,6 +34,8 @@ for (climo, climoname) in zip(("", "climo_"), ("", "Climatology"))
                 ylabel = "Fraction of Median $statname",
                 xlabel = "year",
                 margin = 5Plots.mm,
+                legendtitle="Month"
+
             )
             cvec = [:yellow, :orange, :red, :purple, :blue, :lightseagreen, :green]
             labels = string.(mymonths)

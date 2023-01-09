@@ -116,7 +116,7 @@ for (lsfit, lsname) in zip((theil_sen, lstsq), ("Theil-Sen", "LSTSQ"))
     slopedata .*= 100 * 25
 
     style_kwargs = (;
-        title = "Snow Course April 1st Basin Avg. Trends, $lsname",
+        title = "Snow Course April 1st Basin Mean Slope",
         titlefontsize=10,
         ylabel = "Theil-Sen Slope (% 1991-2020 Median / 25 years)",
         ylabelfontsize  = 8,
@@ -147,6 +147,8 @@ for (lsfit, lsname) in zip((theil_sen, lstsq), ("Theil-Sen", "LSTSQ"))
     annotate!(myp, [(x, -30, Plots.text("$n_tot", 7)) for (x,y,n_tot, idx) in zip(xvals, yvals, totdata, CartesianIndices(omnidata)) if (Tuple(idx)[1]-2)%3==0])
 
     annotate!(myp, [(-4, -30, Plots.text("# Stations:", pointsize=7, halign = :left))])
+
+    annotate!(myp, [(-4, 30, Plots.text("# α=0.05 Significant Trends in Basin:", pointsize=7, halign = :left))])
 
     savedir = "../vis/othervis"
     mkpath(savedir)

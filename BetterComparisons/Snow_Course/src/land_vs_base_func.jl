@@ -1,6 +1,6 @@
 burrowactivate()
 import ERA5Analysis as ERA
-using CSV, DataFrames, Plots, JLD2, Dates
+using CSV, DataFrames, Plots, JLD2, Dates, Printf
 
 include(joinpath(ERA.COMPAREDIR, "Load Scripts", "load_snow_course.jl"))
 include(joinpath(ERA.COMPAREDIR, "Load Scripts", "load_era.jl"))
@@ -71,7 +71,7 @@ function raw_anom_fom_comp_datagen(;
     load_era_func,
     eratype,
     basin_to_stations = def_basin_to_station,
-    stats_to_extract = ["raw", "anom", "normed_anom", "fom"] .* "_rmsd",
+    stats_to_extract = ["raw", "anom", "normed_anom", "fom", "rank"] .* "_rmsd",
     station_compare_args = station_compare_args,
     time_to_pick = 4,
     T = Union{Float64, Missing},
@@ -142,4 +142,23 @@ function error_bar_plot(
     else 
         return p
     end
+end
+
+standard_formatter(x) = Plots.text(Printf.format(Printf.Format("%.2f"), x); pointsize=12)
+
+function error_heatmap(
+    datavec,
+    savedir;
+    data_formatter = standard_formatter,
+    xlabels,
+    ylabels,
+    style_kwargs = (;),
+    plotname = "basin_summary.png",
+)
+    x = length(xlabels)
+    y = length(ylabels)
+    omnidata = reduce(vcat, permutedims.(datavec))
+    heatmap(1:x, 1:y, omnidata; xticks = (1:x, xlabels), yticks = (1:y, ylabels), style_kwargs...)
+    annotate!(vec(tuple.((1:x)', (1:y), data_formatter.(omnidata))))
+    savefig(joinpath(savedir, plotname))
 end

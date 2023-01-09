@@ -42,6 +42,7 @@ const mm_to_inch = 0.0393701
 const hucsizes = [6, 8, 10]
 
 ak_bounds = [-171, -129, 50, 72]
+course_bounds = [-169, -131, 55, 69]
 eratypes = ["Base", "Land"]
 networktypes = ["SNOTEL", "Snow_Course"]
 erafiles =

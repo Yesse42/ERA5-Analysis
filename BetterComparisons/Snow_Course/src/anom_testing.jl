@@ -13,7 +13,7 @@ func = load_plain_nn
 mkpath(dir)
 for (stat, statname, bounds) in zip(("diff_mean", "rmsd", "bias_corrected_rmsd"), ("Bias", "RMSD", "Bias Corrected RMSD"), ((-0.2,0.2),(0, 1), (0,1)))
     for eratype in ERA.eratypes
-        stat_types = ["raw", "anom", "normed_anom", "fom", "climo_fom"]
+        stat_types = ["raw", "anom", "normed_anom", "fom", "rank", "climo_fom"]
         datavec = raw_anom_fom_comp_datagen(;
             eratype,
             load_era_func = load_plain_nn,
@@ -32,8 +32,8 @@ for (stat, statname, bounds) in zip(("diff_mean", "rmsd", "bias_corrected_rmsd")
             dir;
             style_kwargs,
             plotname = "$(eratype)_$(statname)_different_statistic_comparison.png",
-            labels = ["Raw SWE", "Anomaly", "Normed Anomaly", "Frac. of Median", "Climatological Median"],
-            cvec = [:green, :blue, :purple, :red, :orange],
+            labels = ["Raw SWE", "Anomaly", "Normed Anomaly", "Frac. of Median", "Rank", "Climatological Median"],
+            cvec = [:green, :blue, :purple, :red, :yellow, :orange],
             ylim = bounds,
         )
     end
@@ -44,7 +44,7 @@ let
     dir = "../vis/pres"
     mkpath(dir)
 
-    stat_types = ["raw", "anom", "normed_anom", "fom", "climo_fom"]
+    stat_types = ["raw", "anom", "normed_anom", "fom", "rank", "climo_fom"]
     datavec = raw_anom_fom_comp_datagen(;
         eratype = "Land",
         load_era_func = load_plain_nn,
@@ -64,8 +64,8 @@ let
         dir;
         style_kwargs,
         plotname = "Sample_Statistic_Comp.png",
-        labels = ["Raw SWE", "Anomaly", "Normed Anomaly", "Frac. of Median", "Climatological Median"],
-        cvec = [:green, :blue, :purple, :red, :orange],
+        labels = ["Raw SWE", "Anomaly", "Normed Anomaly", "Frac. of Median", "Rank", "Climatological Median"],
+        cvec = [:green, :blue, :purple, :red, :yellow, :orange],
         ylim = (0,0.6),
     )
 
